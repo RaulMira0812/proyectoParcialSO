@@ -1,81 +1,80 @@
-#include "../include/list.h"
+#include "../libreria_h/lista.h"
 
-node* new_node(void* data) { //Allocate a new list node
-	node* n = (node*)malloc(sizeof(node)); 
-	n->data = data; 
-	n->next = NULL; 
+nodo* nuevo_nodo(void* valor) { //Agregar un nuevo nodo a la listaa
+	nodo* n = (nodo*)malloc(sizeof(nodo)); 
+	n->valor = valor; 
+	n->nodo_siguiente = NULL; 
 	return n; 
 }
 
-list* new_list(void (*free_fnc)(void*)) {//Allocate a new list; free_fnc is a function pointer to a fucntion for freeing the data in the list
-	list* l = (list*) malloc(sizeof(list)); 
-	l->free_data = free_fnc; 
-	l->head = NULL; 
+lista* nueva_lista(void (*free_fnc)(void*)) {//Crear una nueva lista; free_fnc es un puntero que permite liberar datos en la listaa
+	lista* l = (lista*) malloc(sizeof(lista)); 
+	l->free_valor = free_fnc; 
+	l->primer_nodo = NULL; 
 	return l; 
 }
 
-void add_to_list(list* l, void* data) { //Adds node to list and returns the new head
-	node* new_head = new_node(data); 
-	new_head -> next = l->head; 
-	l->head = new_head; 
+void agregar_nodo(lista* l, void* valor) { //Agregar nodos a la listaa y retornan si 
+	nodo* new_primer_nodo = new_nodo(valor); 
+	new_primer_nodo -> nodo_siguiente = l->primer_nodo; 
+	l->primer_nodo = new_primer_nodo; 
 }
 
-void remove_front(list* l) { //Removes a node from the front. Doesn't free data, because I need to manage it for this project
-	if (l->head == NULL) {
+void remover_primer_nodo(lista* l) { //Remover el primer_nodo de la listaa. Se libera memoria
+	if (l->primer_nodo == NULL) {
 		return; 
 	}
 
-	node* old_head = l->head; 
-	l->head = old_head->next; 
-	free(old_head); //Call function to free the old head
+	nodo* anterior_primer_nodo = l->primer_nodo; 
+	l->primer_nodo = anterior_primer_nodo->nodo_siguiente; 
+	free(anterior_primer_nodo); //Remover el viejo primer_nodo
 }
 
-void remove_node(list* l, void* data){ //Removes node from list without freeing data
-	node* iter = l->head; 
-	node* to_delete; 
-	if (!iter) //empty list
+void remover_nodo(lista* l, void* valor){ //Remover un nodo de la listaa sin liberar memoria
+	nodo* iter = l->primer_nodo; 
+	nodo* nodo_eliminar; 
+	if (!iter) //listaa vacia
 		return; 
 
-	if (iter->data == data) { //Data in first node, just remove the front
+	if (iter->valor == valor) { //Si encuentra los datos en el primer nodo, se lo elimina
 		remove_front(l); 
 		return; 
 	}
 
-	while (iter->next && iter->next->data != data) {
-		iter = iter->next;
+	while (iter->nodo_siguiente && iter->nodo_siguiente->valor != valor) {
+		iter = iter->nodo_siguiente;
 	}
 
-	//Never found node to remove
-	if (iter->next==NULL)
+	//Si no encuantra el nodo a remover
+	if (iter->nodo_siguiente==NULL)
 		return; 
 
-	//Found node to remove; remove it and free the node
-	to_delete = iter->next; 
-	iter->next = iter->next->next; 
+	//Se encuentra el nodo a remover
+	nodo_eliminar = iter->nodo_siguiente; 
+	iter->nodo_siguiente = iter->nodo_siguiente->nodo_siguiente; 
 
-	free(to_delete); 
-
+	free(nodo_eliminar); 
 }
 
-int list_size(list* l) { //Count number of nodes in a list
+int tamanio(lista* l) { //Contar el numero de nodos de una listaa
 
 	if (l == NULL) {
 		return 0; 
 	}
 
-	node* tmp = l->head; 
+	nodo* tmp = l->primer_nodo; 
 	int cnt = 0; 
 
 	while (tmp != NULL) {
 		cnt++; 
-		tmp = tmp->next; 
+		tmp = tmp->nodo_siguiente; 
 	}
 
 	return cnt; 
 }
 
-bool is_empty(list* l) {
-	if (l->head == NULL)
+bool es_vacia(lista* l) {
+	if (l->primer_nodo == NULL)
 		return true; 
 	return false; 
 }
