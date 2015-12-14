@@ -18,7 +18,7 @@ void inicializar_usuario(char* nickname, int sock, pthread_t hilo_usuario){
 	agregar_nodo(usuarios_todos, nuevo_usuario);//Verifico si el semaforo esta desbloqueado, y agrego el usuario nuevo a la lista de todos los usuarios
 	pthread_mutex_unlock(&usuarios_mutex);
 	
-	agregar_usuario_a_lobby(nuevo_usuario);
+	agrega_usuario_a_espera(nuevo_usuario);
 }
 
 void liberar_usuario(usuario* u) {
