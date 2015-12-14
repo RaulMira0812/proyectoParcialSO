@@ -30,9 +30,9 @@ void liberar_usuario(usuario* u) {
 
 void remover_usuario(usuario* u) { 
 	if (u->canal_actual != NULL) {
-		pthread_mutex_lock(&(u->canal_actual->candado));//ojo con el nombre del atributo chat_room
-		remover_nodo(u->canal_actual->usuarios, (void*)u);//ojo con el nombre del atributo chat_room
-		pthread_mutex_unlock(&(u->canal_actual->candado));//ojo con el nombre del atributo chat_room
+		pthread_mutex_lock(&(u->canal_actual->candado));
+		remover_nodo(u->canal_actual->usuarios, (void*)u);
+		pthread_mutex_unlock(&(u->canal_actual->candado));
 	}
 	pthread_mutex_lock(&usuarios_mutex);
 	remover_nodo(usuarios_todos, (void*)u); 
