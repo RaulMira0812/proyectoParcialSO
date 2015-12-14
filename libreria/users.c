@@ -14,9 +14,9 @@ void inicializar_usuario(char* nickname, int sock, pthread_t hilo_usuario){
 	nuevo_usuario->hilo_usuario = hilo_usuario;
 	pthread_mutex_init(&(nuevo_usuario->usuario_sock_mutex), NULL);
 	
-	pthread_mutex_lock(&users_mutex); 
+	pthread_mutex_lock(&usuarios_mutex); 
 	agregar_nodo(usuarios_todos, nuevo_usuario);//Verifico si el semaforo esta desbloqueado, y agrego el usuario nuevo a la lista de todos los usuarios
-	pthread_mutex_unlock(&users_mutex);
+	pthread_mutex_unlock(&usuarios_mutex);
 	
 	agregar_usuario_a_lobby(nuevo_usuario);
 }
@@ -34,9 +34,9 @@ void remover_usuario(usuario* u) {
 		remover_nodo(u->canal_actual->users_in_room, (void*)u);//ojo con el nombre del atributo chat_room
 		pthread_mutex_unlock(&(u->canal_actual->chat_room_mutex));//ojo con el nombre del atributo chat_room
 	}
-	pthread_mutex_lock(&users_mutex);
+	pthread_mutex_lock(&usuarios_mutex);
 	remover_nodo(usuarios_todos, (void*)u); 
-	pthread_mutex_unlock(&users_mutex);
+	pthread_mutex_unlock(&usuarios_mutex);
 	liberar_usuario(u); 
 }
 
@@ -55,7 +55,7 @@ void set_prompt_usuario(usuario* u, char* nuevo_prompt) {
 		printf("Error al enviar el nuevo prompt: 0 bytes written.\nError: %s\n", strerror(errno));
 	}
 }
-bool user_exists(char* nick) {
+bool existe_usuario(char* nick) {
 	usuario* tmp_u;
 	bool existe = false;
 	nodo* iter = usuarios_todos->primer_nodo;
