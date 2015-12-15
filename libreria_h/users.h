@@ -1,6 +1,6 @@
 #ifndef USERS_H
 #define USERS_H
-#include "chat_room.h"
+#include "channel.h"
 #include "list.h"
 #include "commands.h"
 #include "server_mutexes.h"
