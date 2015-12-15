@@ -1,4 +1,4 @@
-#include "../libreria/server_mutexes.h"
+#include "../libreria_h/server_mutexes.h"
 
 void inicializar_mutexes() {
 	pthread_mutex_init(&socket_mutex, NULL); //Valida que dos hilos no sobreescriban simultaneamente el socket del cliente

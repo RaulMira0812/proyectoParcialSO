@@ -1,5 +1,5 @@
-#ifndef CHAT_ROOM_H
-#define CHAT_ROOM_H
+#ifndef CANAL_H
+#define CANAL_H
 
 #include "usuario.h"
 #include "lista.h"

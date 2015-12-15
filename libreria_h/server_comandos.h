@@ -1,5 +1,5 @@
-#ifndef SERVER_COMMANDS
-#define SERVER_COMMANDS
+#ifndef SERVER_COMANDOS
+#define SERVER_COMANDOS
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>

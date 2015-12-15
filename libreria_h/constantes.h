@@ -1,5 +1,5 @@
-#ifndef CONSTANTS
-#define CONSTANTS
+#ifndef CONSTANTES
+#define CONSTANTES
 
 
 const int BUFFER_SIZE; 

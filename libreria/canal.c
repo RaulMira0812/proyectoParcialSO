@@ -1,4 +1,4 @@
-#include "../include/canal.h"
+#include "../libreria_h/canal.h"
 
 static const char* nombre_canal_espera = "LOBBY"; //Nombre del canal de espera
 static list* canales = NULL; //lista de todos los canales

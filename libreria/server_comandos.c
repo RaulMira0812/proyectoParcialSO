@@ -1,4 +1,4 @@
-#include "../libreria/server_comandos.h"
+#include "../libreria_h/server_comandos.h"
 
 
 void partir_cadena(char* cadena) {
