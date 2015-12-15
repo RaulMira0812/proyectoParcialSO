@@ -1,9 +1,12 @@
 #ifndef USERS_H
 #define USERS_H
+
 #include "channel.h"
 #include "list.h"
-#include "commands.h"
+#include "server_commands.h"
 #include "server_mutexes.h"
+#include "constants.h"
+
 #include <pthread.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -16,7 +19,7 @@ struct usuario_struct {
 	char* nickname;
 	pthread_t hilo_usuario; //cada usuario tiene asignado un hilo unico
 	int socket_usuario;
-	chat_room* canal_actual;
+	canal* canal_actual;
 	pthread_mutex_t usuario_sock_mutex;
 };
 

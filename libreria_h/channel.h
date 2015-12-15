@@ -3,10 +3,9 @@
 
 #include "users.h"
 #include "list.h"
-#include "commands.h"
+#include "server_commands.h"
+#include "server_mutexes.h"
 #include "constants.h"
-#include "misc.h"
-#include "global_server_cmds.h"
 
 #include <stdio.h>
 #include <stdlib.h>

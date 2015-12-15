@@ -31,24 +31,24 @@ void liberar_canal(canal* c) {
 	free(c); 
 }
 
-void agrega_usuario_a_espera(user* u) { 
+void agrega_usuario_a_espera(usuario* u) { 
 
 	char nuevo_prompt[MAX_PROMPT_SIZE]; 
 	char command_buffer[BUFFER_SIZE]; 
 
-	sprintf(nuevo_prompt, "%s $ %s>", u->nick, nombre_canal_espera); 
+	sprintf(nuevo_prompt, "%s $ %s>", u->nickname, nombre_canal_espera); 
 	set_prompt_usuario(u, nuevo_prompt); // envia el comando prompt al usuario para forzar cambiar el prompt
 
 	agregar_nodo(canal_espera -> usuarios, (void*)u); 
 	u->canal_actual = canal_espera;  // el usuario actualmente esta en el lobby
 
 	comando_a_usuario(u, (char*)JOIN_SUCCESS_CMD); 
-	sprintf(command_buffer, "+PRINT [Server]: Conectado como usuario '%s'.\n[Server]: Ingresando al lobby.\n \n", u->nick); 
+	sprintf(command_buffer, "+PRINT [Server]: Conectado como usuario '%s'.\n[Server]: Ingresando al lobby.\n \n", u->nickname); 
 	comando_a_usuario(u, command_buffer); 
 	canal_loop(u); 
 }
 
-void canal_loop(user* u) {
+void canal_loop(usuario* u) {
 	char fraccion_de_comando[BUFFER_SIZE];
 	char* siguiente_comando = NULL; 	
 	bool err = false;	
@@ -61,7 +61,7 @@ void canal_loop(user* u) {
 		siguiente_comando = get_siguiente_comando(u->socket_usuario, fraccion_de_comando, &err); 
 
 		if (err) {
-printf("Error al leer el mensaje del cliente.\nCerrando el socket #%d al cliente '%s'\nError: %s\n", u->socket_usuario, u->nick, strerror(errno)); 
+printf("Error al leer el mensaje del cliente.\nCerrando el socket #%d al cliente '%s'\nError: %s\n", u->socket_usuario, u->nickname, strerror(errno)); 
 			remover_usuario(u); 
 			if (siguiente_comando) {
 				free(siguiente_comando); 
@@ -73,7 +73,7 @@ printf("Error al leer el mensaje del cliente.\nCerrando el socket #%d al cliente
 		}
 		else {
 			trim_str(siguiente_comando); 
-			printf("Mensaje del cliente %s: %s\n", u->nick, siguiente_comando); 
+			printf("Mensaje del cliente %s: %s\n", u->nickname, siguiente_comando); 
 			ejecuta_comando(siguiente_comando, u); 
 		}
 	}
@@ -89,7 +89,7 @@ void ejecuta_comando(char* cmd, usuario* u) {
 	if (strcmp(cmd_nombre, "MSG") == 0) { 
 		msg = (char*)(&cmd[strlen("MSG")+1]); //Obtengo el contenido del mensaje
 		trim_str(msg); 
-		broadcast(msg, u->canal_actual, u->nick);
+		broadcast(msg, u->canal_actual, u->nickname);
 	}
 	else if (strcmp(cmd_nombre, "PRIVMSG")==0) { //+JOIN
 		receptor = (char*)(&cmd[strlen("PRIVMSG")+1]);
@@ -112,12 +112,12 @@ void ejecuta_comando(char* cmd, usuario* u) {
 		lista_canales(u);
 	}
 	else {
-		printf("Received bad command from user '%s', sending fail msg\n", u->nick);
+		printf("Received bad command from usuario '%s', sending fail msg\n", u->nickname);
 		comando_a_usuario(u, (char*)FAIL_CMD);
 	}
 }
 
-void agrega_usuario_canal(user* u, char* nombre_canal) { //Agrega el usuario u al canal si existe, si no primero crea el canal
+void agrega_usuario_canal(usuario* u, char* nombre_canal) { //Agrega el usuario u al canal si existe, si no primero crea el canal
 	if (nombre_canal == NULL || strlen(nombre_canal) <= 0) {
 		printf("Error: Se intento conectar a un canal inexistente.\n");
 		return;
@@ -137,7 +137,7 @@ void agrega_usuario_canal(user* u, char* nombre_canal) { //Agrega el usuario u a
 	char msg_buffer[BUFFER_SIZE];
 	char new_prompt[MAX_PROMPT_SIZE];
 	
-	sprintf(new_prompt, "%s @ %s>", u->nick, nombre_canal);
+	sprintf(new_prompt, "%s @ %s>", u->nickname, nombre_canal);
 	set_prompt_usuario(u, new_prompt); //Setea el prompt del usuario
 	
 	if ( (canal_a_entrar = canal_existe(nombre_canal))) { //Verifica si el canal ya existe
@@ -148,7 +148,7 @@ void agrega_usuario_canal(user* u, char* nombre_canal) { //Agrega el usuario u a
 		comando_a_usuario(u, (char*)JOIN_SUCCESS_CMD);
 		sprintf(msg_buffer, "[Server]: Uniendose al canal '%s'\n \n", canal_a_entrar->nombre_canal);
 		mensaje_a_usuario(u, msg_buffer); //Envia el mensaje al usuario
-		printf("Usuario %s se unio al canal %s.\n", u->nick, canal_a_entrar->nombre_canal);
+		printf("Usuario %s se unio al canal %s.\n", u->nickname, canal_a_entrar->nombre_canal);
 	}
 	else {
 		nombre_nuevo_canal = (char*)malloc(strlen(nombre_canal) + 1);
@@ -158,11 +158,11 @@ void agrega_usuario_canal(user* u, char* nombre_canal) { //Agrega el usuario u a
 		agregar_nodo(canal_a_entrar->usuarios, (void*)u); //Agrega el usuario al nuevo canal
 		remover_nodo(u->canal_actual->usuarios, u); //elimina al usuario del antiguo canal que estaba
 		u->canal_actual = canal_a_entrar; //define el canal del usuario al que se acabo de unir
-		//If we successfully added user to room, send success command
+		//If we successfully added usuario to room, send success command
 		comando_a_usuario(u, (char*)JOIN_SUCCESS_CMD);
 		sprintf(msg_buffer, "[Server]: Creando canal '%s'\n \n", nombre_nuevo_canal);
 		mensaje_a_usuario(u, msg_buffer);
-		printf("Usuario %s se unio al nuevo canal %s.\n", u->nick, nombre_nuevo_canal);
+		printf("Usuario %s se unio al nuevo canal %s.\n", u->nickname, nombre_nuevo_canal);
 	}
 }
 
@@ -182,88 +182,92 @@ void broadcast(char* msg, canal* c, char* emisor) {
 		err = send(tmp_socket, buffer, strlen(buffer) + 1, 0);
 		pthread_mutex_unlock(&(tmp_usuario->usuario_sock_mutex));
 		if (err < 0) {
-			printf("Error sending msg %s to user %s\n", buffer, tmp_usuario -> nick);
+			printf("Error sending msg %s to usuario %s\n", buffer, tmp_usuario -> nickname);
 		}
 		tmp_nodo = tmp_nodo -> nodo_siguiente;
 	}
 }
 
-void list_users_in_room(user* u) { //Print out all the users in a user's room to the user
-	node* tmp = u->canal_actual->usuarios->head;
-	user* tmp_user = NULL;
-	int user_no = 0;
+void lista_usuarios(usuario* u) { //le muuestra al usuario u la lista de todos los usuarios que estan en su canal
+	nodo* tmp = u->canal_actual->usuarios->primer_nodo;
+	usuario* usuario_temporal = NULL;
+	int numero_usuario = 0;
 	char strbuffer[BUFFER_SIZE];
-	mensaje_a_usuario(u, "All users in room:");
+	mensaje_a_usuario(u, "Todos los usuarios en el canal:");
 	while (tmp != NULL) {
-		tmp_user = (user*)(tmp->data);
-		sprintf(strbuffer, ">User %d: %s", ++user_no, tmp_user->nick);
+		usuario_temporal = (usuario*)(tmp->valor);
+		sprintf(strbuffer, ">Usuario %d: %s", ++numero_usuario, usuario_temporal->nickname);
 		mensaje_a_usuario(u, strbuffer);
-		tmp = tmp->next;
-	}
-	mensaje_a_usuario(u, " \n"); //Endline after list of users for pretty formatting.
-}
-void list_server_users(user* u) {
-	node* tmp = all_users->head;
-	user* tmp_user = NULL;
-	int user_no = 0;
-	char strbuffer[BUFFER_SIZE];
-	mensaje_a_usuario(u, "All users on server:");
-	while (tmp != NULL) {
-		tmp_user = (user*)(tmp->data);
-		sprintf(strbuffer, ">User %d: %s in room %s", ++user_no, tmp_user->nick, tmp_user->canal_actual->room_name);
-		mensaje_a_usuario(u, strbuffer);
-		tmp = tmp->next;
-	}
-	mensaje_a_usuario(u, " \n"); //Endline after list of users for pretty formatting.
-}
-void list_all_rooms(user* u) {
-	node* tmp = all_chat_rooms->head;
-	chat_room* tmp_room = NULL;
-	int room_no = 0;
-	char strbuffer[BUFFER_SIZE];
-	mensaje_a_usuario(u, "All chat rooms on server:");
-	while (tmp != NULL) {
-		tmp_room = (chat_room*)tmp->data;
-		sprintf(strbuffer, ">Room %d: %s", ++room_no, tmp_room->room_name);
-		mensaje_a_usuario(u, strbuffer);
-		tmp = tmp->next;
+		tmp = tmp->nodo_siguiente;
 	}
 	mensaje_a_usuario(u, " \n");
 }
-void mensaje_a_usuario(user* u, char* msg) {
+
+void lista_usuarios_server(usuario* u) { //le muestra al usuario u la lista de todos los usuarios en el server
+	nodo* tmp = usuarios_todos->head;
+	usuario* usuario_temporal = NULL;
+	int numero_usuario = 0;
+	char strbuffer[BUFFER_SIZE];
+	mensaje_a_usuario(u, "Todos los usuarios en el servidor:");
+	while (tmp != NULL) {
+		usuario_temporal = (usuario*)(tmp->valor);
+sprintf(strbuffer, ">Usuario %d: %s en el canal %s", ++numero_usuario, usuario_temporal->nickname, usuario_temporal->canal_actual->nombre_canal);
+		mensaje_a_usuario(u, strbuffer);
+		tmp = tmp->nodo_siguiente;
+	}
+	mensaje_a_usuario(u, " \n"); 
+}
+
+void lista_canales(usuario* u) {
+	nodo* tmp = canales->head;
+	canal* canal_temporal = NULL;
+	int numero_canal = 0;
+	char strbuffer[BUFFER_SIZE];
+	mensaje_a_usuario(u, "Todos los canales en el servidor:");
+	while (tmp != NULL) {
+		canal_temporal = (canal*)tmp->valor;
+		sprintf(strbuffer, ">Room %d: %s", ++numero_canal, canal_temporal->nombre_canal);
+		mensaje_a_usuario(u, strbuffer);
+		tmp = tmp->nodo_siguiente;
+	}
+	mensaje_a_usuario(u, " \n");
+}
+
+void mensaje_a_usuario(usuario* u, char* msg) {
 	char buffer[BUFFER_SIZE];
 	sprintf(buffer, "%s %s", PRINT_CMD, msg);
 	int err = -1;
-	pthread_mutex_lock(&(u->user_sock_mutex));
-	err = send(u->user_socket, buffer, strlen(buffer) + 1, 0);
-	pthread_mutex_unlock(&(u->user_sock_mutex));
+	pthread_mutex_lock(&(u->usuario_sock_mutex));
+	err = send(u->socket_usuario, buffer, strlen(buffer) + 1, 0);
+	pthread_mutex_unlock(&(u->usuario_sock_mutex));
 	if (err < 0)
-		printf("Error in 'mensaje_a_usuario' function.\nError: %s\n", strerror(errno));
+		printf("Error en 'mensaje_a_usuario' function.\nError: %s\n", strerror(errno));
 	else if (err == 0) {
-		printf("Error in 'mensaje_a_usuario': 0 bytes written.\nError: %s\n", strerror(errno));
+		printf("Error en 'mensaje_a_usuario': 0 bytes escritos.\nError: %s\n", strerror(errno));
 	}
 }
-void comando_a_usuario(user* u, char* msg) {
+void comando_a_usuario(usuario* u, char* msg) {
 	if (msg == NULL || strlen(msg) <=0) {
-		printf("Error: NULL or 0-length message in comando_a_usuario()\n");
+		printf("Error: NULL o mensaje vacio en comando_a_usuario()\n");
 		return;
 	}
 	int err = -1;
-	pthread_mutex_lock(&(u->user_sock_mutex));
-	err = send(u->user_socket, msg, strlen(msg) + 1, 0);
-	pthread_mutex_unlock(&(u->user_sock_mutex));
+	pthread_mutex_lock(&(u->usuario_sock_mutex));
+	err = send(u->socket_usuario, msg, strlen(msg) + 1, 0);
+	pthread_mutex_unlock(&(u->usuario_sock_mutex));
 	
 	if (err < 0)
-		printf("Error sending in 'comando_a_usuario' function.\nError: %s\n", strerror(errno));
+		printf("Error al enviar 'comando_a_usuario' function.\nError: %s\n", strerror(errno));
 	else if (err == 0)
-		printf("Error sending in 'comando_a_usuario': 0 bytes written.\nError: %s\n", strerror(errno));
+		printf("Error al enviar'comando_a_usuario': 0 bytes escritos.\nError: %s\n", strerror(errno));
 }
-chat_room* canal_existe(char* chat_room_name) {
-	node* tmp = all_chat_rooms->head;
+
+canal* canal_existe(char* nombre_canal) {
+	nodo* tmp = canales->primer_nodo;
 	while (tmp != NULL) {
-		if (strcasecmp(((chat_room*)(tmp->data))->room_name, chat_room_name)==0)
-			return (chat_room*)(tmp->data);
-		tmp = tmp->next ;
+		if (strcasecmp(((canal*)(tmp->valor))->nombre_canal, nombre_canal)==0)
+			return (canal*)(tmp->valor);
+		tmp = tmp->nodo_siguiente ;
 	}
 	return NULL;
 }
