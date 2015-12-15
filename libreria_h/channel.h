@@ -38,9 +38,9 @@ void liberar_canal(canal* canal); //libera un canal y finaliza el candado
 
 void agrega_usuario_a_espera(usuario* u); //Agrega un usuario a la cola de espera
 
-void agrega_usuario(usuario* u, char* c); //Agrega usuario u al canal c si existe, si no, primero lo crea
+void agrega_usuario_canal(usuario* u, char* c); //Agrega usuario u al canal c si existe, si no, primero lo crea
 
-void chat_room_loop(usuario* u);//Receive-act on commands from client
+void canal_loop(usuario* u);//Recibe/ejecuta los comandos del cliente 
 
 void ejecuta_comando(char* cmd, usuario* u); //Ejecuta un comando que recibe del chat de usuario
 

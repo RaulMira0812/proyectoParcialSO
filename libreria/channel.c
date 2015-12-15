@@ -1,59 +1,134 @@
+#include "../include/channel.h"
+
+static const char* nombre_canal_espera = "LOBBY"; //Nombre del canal de espera
+static list* canales = NULL; //lista de todos los canales
+static canal* canal_espera = NULL; //canal de espera (lobby)
+
+void iniciar_canales() {
+
+	if (canales == NULL) {
+		canales = new_list((void(*)(void*))liberar_canal); 
+	}
+	if (canal_espera == NULL) {
+		canal_espera = nuevo_canal((char*)nombre_canal_espera); 
+		agregar_nodos(canales, (void*)canal_espera); 
+	}
+}
+
+canal* nuevo_canal(char* nombre) { //Crea un nuevo canal.
+
+	canal* nuevo_canal = (canal*)malloc(sizeof(canal)); 
+	nuevo_canal -> usuarios = nueva_lista((void(*)(void*))liberar_usuario); 
+	nuevo_canal -> nombre_canal = nombre; 
+	nuevo_canal -> mensaje_actual = NULL; 
+	pthread_mutex_init(&(nuevo_canal->candado), NULL); 
+	return nuevo_canal; 
+}	
+
+void liberar_canal(canal* c) {
+	pthread_mutex_destroy(&(c->candado));
+	free(c->nombre_canal); 
+	free(c); 
+}
+
+void agrega_usuario_a_espera(user* u) { 
+
+	char nuevo_prompt[MAX_PROMPT_SIZE]; 
+	char command_buffer[BUFFER_SIZE]; 
+
+	sprintf(nuevo_prompt, "%s $ %s>", u->nick, nombre_canal_espera); 
+	set_prompt_usuario(u, nuevo_prompt); // envia el comando prompt al usuario para forzar cambiar el prompt
+
+	agregar_nodo(canal_espera -> usuarios, (void*)u); 
+	u->canal_actual = canal_espera;  // el usuario actualmente esta en el lobby
+
+	comando_a_usuario(u, (char*)JOIN_SUCCESS_CMD); 
+	sprintf(command_buffer, "+PRINT [Server]: Conectado como usuario '%s'.\n[Server]: Ingresando al lobby.\n \n", u->nick); 
+	comando_a_usuario(u, command_buffer); 
+	canal_loop(u); 
+}
+
+void canal_loop(user* u) {
+	char fraccion_de_comando[BUFFER_SIZE];
+	char* siguiente_comando = NULL; 	
+	bool err = false;	
+
+	fraccion_de_comando[0] = '\0'; 
+	while (true) {
+		if (siguiente_comando) {
+			free(siguiente_comando); 
+			siguiente_comando = NULL;}
+		siguiente_comando = get_siguiente_comando(u->socket_usuario, fraccion_de_comando, &err); 
+
+		if (err) {
+printf("Error al leer el mensaje del cliente.\nCerrando el socket #%d al cliente '%s'\nError: %s\n", u->socket_usuario, u->nick, strerror(errno)); 
+			remover_usuario(u); 
+			if (siguiente_comando) {
+				free(siguiente_comando); 
+			}
+			pthread_exit(NULL); 
+		}	
+		else if (siguiente_comando == NULL) { //Todavía no ha recibido el mensaje completo
+			continue; 	
+		}
+		else {
+			trim_str(siguiente_comando); 
+			printf("Mensaje del cliente %s: %s\n", u->nick, siguiente_comando); 
+			ejecuta_comando(siguiente_comando, u); 
+		}
+	}
+}
+
 void ejecuta_comando(char* cmd, usuario* u) {
 	char* cmd_nombre = NULL;
 	char* cmd_argumento = NULL;
 	char* msg = NULL;
 	
 	cmd_nombre = strtok(cmd, " ");//Separo el comando enviado por el usuario, obteniendo solo el nombre del comando
-	
-<<<<<<< HEAD
-	if (strcmp(cmd_nombre, MSG_CMD) == 0) { 
-		msg = (char*)(&cmd[strlen(MSG_CMD)+1]); //Obtengo el contenido del mensaje
-		trim_str(msg); 
-		msg_all_users(msg, u->current_room, u->nick);
-	}
-=======
+
 	if (strcmp(cmd_nombre, "MSG") == 0) { 
 		msg = (char*)(&cmd[strlen("MSG")+1]); //Obtengo el contenido del mensaje
 		trim_str(msg); 
-		msg_all_users(msg, u->current_room, u->nick);
+		broadcast(msg, u->canal_actual, u->nick);
 	}
 	else if (strcmp(cmd_nombre, "PRIVMSG")==0) { //+JOIN
 		receptor = (char*)(&cmd[strlen("PRIVMSG")+1]);
 		msg = (char*)(&cmd[strlen("PRIVMSG")+1]);
 		cmd_argumento = strtok(NULL, " "); //Room name is the second token
-		add_user_to_room(u, cmd_argumento);
+		agrega_usuario_canal(u, cmd_argumento);
 	}
->>>>>>> ae737454fb38d97f61e011659daa2c1f1fc3e8a1
+
 	else if (strcmp(cmd_nombre, JOIN_CMD)==0) { //+JOIN
 		cmd_argumento = strtok(NULL, " "); //Room name is the second token
-		add_user_to_room(u, cmd_argumento);
+		agrega_usuario_canal(u, cmd_argumento);
 	}
 	else if (strcmp(cmd_nombre, LIST_CMD) == 0) {
-		list_users_in_room(u);
+		lista_usuarios(u);
 	}
 	else if (strcmp(cmd_nombre, LIST_ALL_CMD) == 0) {
-		list_server_users(u);
+		lista_usuarios_server(u);
 	}
 	else if (strcmp(cmd_nombre, ROOMS_CMD) == 0) {
-		list_all_rooms(u);
+		lista_canales(u);
 	}
 	else {
 		printf("Received bad command from user '%s', sending fail msg\n", u->nick);
-		print_raw_to_user(u, (char*)FAIL_CMD);
+		comando_a_usuario(u, (char*)FAIL_CMD);
 	}
 }
-void add_user_to_room(user* u, char* room_name) { //Adds user to room if it exists, otherwise creates new room and adds user
-	if (room_name == NULL || strlen(room_name) <= 0) {
-		printf("Error: Attempt to add user to NULL or empty room name.\n");
+
+void agrega_usuario_canal(user* u, char* nombre_canal) { //Agrega el usuario u al canal si existe, si no primero crea el canal
+	if (nombre_canal == NULL || strlen(nombre_canal) <= 0) {
+		printf("Error: Se intento conectar a un canal inexistente.\n");
 		return;
 	}
-	if (strcasecmp(room_name, u->current_room->room_name) == 0) {
-		print_to_user(u, "[Server]: You are already in that chat room!");
+	if (strcasecmp(nombre_canal, u->canal_actual->nombre_canal) == 0) {
+		mensaje_a_usuario(u, "[Server]: Usted ya se encuentra conectado a este canal!");
 		return;
 	}
-	if (!valid_charset(room_name)) {
-		print_to_user(u, "[Server]: Invalid room name!\n"
-		"[Server]: Alphanumeric or '_', '-', '*', '&' required!\n ");
+	if (!valid_charset(nombre_canal)) {
+		print_to_user(u, "[Server]: Nombre del canal invalido!\n"
+		"[Server]: debe ser alfanumerico o  '_', '-', '*', '&'!\n ");
 		return;
 	}
 	
@@ -93,10 +168,8 @@ void add_user_to_room(user* u, char* room_name) { //Adds user to room if it exis
 		printf("User %s joined new room %s.\n", u->nick, new_room_name);
 	}
 }
-<<<<<<< HEAD
-=======
 
->>>>>>> ae737454fb38d97f61e011659daa2c1f1fc3e8a1
+
 void broadcast(char* msg, canal* c, char* emisor) {
 	char buffer[BUFFER_SIZE];
 	int tmp_socket = -1;
@@ -104,11 +177,8 @@ void broadcast(char* msg, canal* c, char* emisor) {
 	usuario* tmp_usuario = NULL;
 	int err = -1;
 	while (tmp_nodo != NULL) {
-<<<<<<< HEAD
-		tmp_usuario = (user*)(tmp_nodo -> data);
-=======
+
 		tmp_usuario = (usuario*)(tmp_nodo -> valor);
->>>>>>> ae737454fb38d97f61e011659daa2c1f1fc3e8a1
 		tmp_socket = tmp_usuario -> socket_usuario;
 		sprintf(buffer, "%s %s dice: %s\n", "Imprime cmd", emisor, msg);
 		pthread_mutex_lock(&(tmp_usuario->usuario_sock_mutex));
@@ -120,10 +190,7 @@ void broadcast(char* msg, canal* c, char* emisor) {
 		tmp_nodo = tmp_nodo -> nodo_siguiente;
 	}
 }
-<<<<<<< HEAD
-=======
 
->>>>>>> ae737454fb38d97f61e011659daa2c1f1fc3e8a1
 void list_users_in_room(user* u) { //Print out all the users in a user's room to the user
 	node* tmp = u->current_room->users_in_room->head;
 	user* tmp_user = NULL;
@@ -202,8 +269,4 @@ chat_room* chat_room_exists(char* chat_room_name) {
 		tmp = tmp->next ;
 	}
 	return NULL;
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> ae737454fb38d97f61e011659daa2c1f1fc3e8a1
