@@ -6,7 +6,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include "constants.h"
+#include "constantes.h"
 
 //quitar espacio al final de la cadena
 void partir_cadena(char* cadena); 

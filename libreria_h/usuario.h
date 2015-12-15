@@ -1,11 +1,11 @@
 #ifndef USERS_H
 #define USERS_H
 
-#include "channel.h"
-#include "list.h"
-#include "server_commands.h"
+#include "canal.h"
+#include "lista.h"
+#include "server_comandos.h"
 #include "server_mutexes.h"
-#include "constants.h"
+#include "constantes.h"
 
 #include <pthread.h>
 #include <stdlib.h>

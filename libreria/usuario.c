@@ -1,4 +1,4 @@
-#include "../libreria_h/users.h"
+#include "../libreria_h/usuario.h"
 
 pthread_mutex_t sock_mutex; //garantiza que dos hilos no se sobreescriban 
 

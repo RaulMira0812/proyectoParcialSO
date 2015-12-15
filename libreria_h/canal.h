@@ -1,11 +1,11 @@
 #ifndef CHAT_ROOM_H
 #define CHAT_ROOM_H
 
-#include "users.h"
-#include "list.h"
-#include "server_commands.h"
+#include "usuario.h"
+#include "lista.h"
+#include "server_comandos.h"
 #include "server_mutexes.h"
-#include "constants.h"
+#include "constantes.h"
 
 #include <stdio.h>
 #include <stdlib.h>
