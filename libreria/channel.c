@@ -5,11 +5,25 @@ void ejecuta_comando(char* cmd, usuario* u) {
 	
 	cmd_nombre = strtok(cmd, " ");//Separo el comando enviado por el usuario, obteniendo solo el nombre del comando
 	
+<<<<<<< HEAD
 	if (strcmp(cmd_nombre, MSG_CMD) == 0) { 
 		msg = (char*)(&cmd[strlen(MSG_CMD)+1]); //Obtengo el contenido del mensaje
 		trim_str(msg); 
 		msg_all_users(msg, u->current_room, u->nick);
 	}
+=======
+	if (strcmp(cmd_nombre, "MSG") == 0) { 
+		msg = (char*)(&cmd[strlen("MSG")+1]); //Obtengo el contenido del mensaje
+		trim_str(msg); 
+		msg_all_users(msg, u->current_room, u->nick);
+	}
+	else if (strcmp(cmd_nombre, "PRIVMSG")==0) { //+JOIN
+		receptor = (char*)(&cmd[strlen("PRIVMSG")+1]);
+		msg = (char*)(&cmd[strlen("PRIVMSG")+1]);
+		cmd_argumento = strtok(NULL, " "); //Room name is the second token
+		add_user_to_room(u, cmd_argumento);
+	}
+>>>>>>> ae737454fb38d97f61e011659daa2c1f1fc3e8a1
 	else if (strcmp(cmd_nombre, JOIN_CMD)==0) { //+JOIN
 		cmd_argumento = strtok(NULL, " "); //Room name is the second token
 		add_user_to_room(u, cmd_argumento);
@@ -79,6 +93,10 @@ void add_user_to_room(user* u, char* room_name) { //Adds user to room if it exis
 		printf("User %s joined new room %s.\n", u->nick, new_room_name);
 	}
 }
+<<<<<<< HEAD
+=======
+
+>>>>>>> ae737454fb38d97f61e011659daa2c1f1fc3e8a1
 void broadcast(char* msg, canal* c, char* emisor) {
 	char buffer[BUFFER_SIZE];
 	int tmp_socket = -1;
@@ -86,7 +104,11 @@ void broadcast(char* msg, canal* c, char* emisor) {
 	usuario* tmp_usuario = NULL;
 	int err = -1;
 	while (tmp_nodo != NULL) {
+<<<<<<< HEAD
 		tmp_usuario = (user*)(tmp_nodo -> data);
+=======
+		tmp_usuario = (usuario*)(tmp_nodo -> valor);
+>>>>>>> ae737454fb38d97f61e011659daa2c1f1fc3e8a1
 		tmp_socket = tmp_usuario -> socket_usuario;
 		sprintf(buffer, "%s %s dice: %s\n", "Imprime cmd", emisor, msg);
 		pthread_mutex_lock(&(tmp_usuario->usuario_sock_mutex));
@@ -98,6 +120,10 @@ void broadcast(char* msg, canal* c, char* emisor) {
 		tmp_nodo = tmp_nodo -> nodo_siguiente;
 	}
 }
+<<<<<<< HEAD
+=======
+
+>>>>>>> ae737454fb38d97f61e011659daa2c1f1fc3e8a1
 void list_users_in_room(user* u) { //Print out all the users in a user's room to the user
 	node* tmp = u->current_room->users_in_room->head;
 	user* tmp_user = NULL;
@@ -176,4 +202,8 @@ chat_room* chat_room_exists(char* chat_room_name) {
 		tmp = tmp->next ;
 	}
 	return NULL;
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> ae737454fb38d97f61e011659daa2c1f1fc3e8a1
