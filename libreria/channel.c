@@ -127,45 +127,42 @@ void agrega_usuario_canal(user* u, char* nombre_canal) { //Agrega el usuario u a
 		return;
 	}
 	if (!valid_charset(nombre_canal)) {
-		print_to_user(u, "[Server]: Nombre del canal invalido!\n"
+		mensaje_a_usuario(u, "[Server]: Nombre del canal invalido!\n"
 		"[Server]: debe ser alfanumerico o  '_', '-', '*', '&'!\n ");
 		return;
 	}
 	
-	chat_room* room_to_enter;
-	char* new_room_name; //Will dynamically allocate to pass to new_room(char*)
+	canal* canal_a_entrar;
+	char* nombre_nuevo_canal; 
 	char msg_buffer[BUFFER_SIZE];
 	char new_prompt[MAX_PROMPT_SIZE];
 	
-	sprintf(new_prompt, "%s @ %s>", u->nick, room_name);
-	set_user_prompt(u, new_prompt); //Set user's prompt
+	sprintf(new_prompt, "%s @ %s>", u->nick, nombre_canal);
+	set_prompt_usuario(u, new_prompt); //Setea el prompt del usuario
 	
-	if ( (room_to_enter = chat_room_exists(room_name))) { //Check if room exists.
-		remove_node(u->current_room->users_in_room, u); //Remove user from old chat room
-		u->current_room = room_to_enter; //Set user's current room to the new room
-		add_to_list(room_to_enter->users_in_room, (void*)u); //Add user to new chat room's list of users
-		//If we successfully added user to room, send success command
-		print_raw_to_user(u, (char*)JOIN_SUCCESS_CMD);
-		//Build string to send user. Different if joining room vs. creating new room
-		sprintf(msg_buffer, "[Server]: Joining room '%s'\n \n", room_to_enter->room_name);
-		print_to_user(u, msg_buffer); //Send message to user
-		printf("User %s joined existing room %s.\n", u->nick, room_to_enter->room_name);
+	if ( (canal_a_entrar = canal_existe(nombre_canal))) { //Verifica si el canal ya existe
+		remover_nodo(u->canal_actual->usuarios, u); //Quita al usuario del canal en que estaba anteriormente
+		u->canal_actual = canal_a_entrar; //agrega al usuario al canal actual
+		agregar_nodo(canal_a_entrar->usuarios, (void*)u); //agrega al usuario a la lista de usuarios de dicho canal
+		//Si se pudo agregar al usuario al canal le enviamos un mensaje de exito
+		comando_a_usuario(u, (char*)JOIN_SUCCESS_CMD);
+		sprintf(msg_buffer, "[Server]: Uniendose al canal '%s'\n \n", canal_a_entrar->nombre_canal);
+		mensaje_a_usuario(u, msg_buffer); //Envia el mensaje al usuario
+		printf("Usuario %s se unio al canal %s.\n", u->nick, canal_a_entrar->nombre_canal);
 	}
 	else {
-	//Need to dynamically allocate name to store in chat_room object if a new room is created
-		new_room_name = (char*)malloc(strlen(room_name) + 1);
-		strcpy(new_room_name, room_name);
-		room_to_enter = new_chat_room(new_room_name); //Create new chat room
-		add_to_list(all_chat_rooms, room_to_enter); //Add new room to universal list of chat rooms
-		add_to_list(room_to_enter->users_in_room, (void*)u); //Add user to new chat room's list of users
-		remove_node(u->current_room->users_in_room, u); //Remove user from old chat room
-		u->current_room = room_to_enter; //Set user's current room to the new room
+		nombre_nuevo_canal = (char*)malloc(strlen(nombre_canal) + 1);
+		strcpy(nombre_nuevo_canal, nombre_canal);
+		canal_a_entrar = nuevo_canal(nombre_nuevo_canal); //Crea un nuevo canal
+		agregar_nodo(canales, canal_a_entrar); //Agrega el nuevo canal a la lista de canales
+		agregar_nodo(canal_a_entrar->usuarios, (void*)u); //Agrega el usuario al nuevo canal
+		remover_nodo(u->canal_actual->usuarios, u); //elimina al usuario del antiguo canal que estaba
+		u->canal_actual = canal_a_entrar; //define el canal del usuario al que se acabo de unir
 		//If we successfully added user to room, send success command
-		print_raw_to_user(u, (char*)JOIN_SUCCESS_CMD);
-		//Build string to send user. Different if joining room vs. creating new room
-		sprintf(msg_buffer, "[Server]: Creating new room '%s'\n \n", new_room_name);
-		print_to_user(u, msg_buffer);
-		printf("User %s joined new room %s.\n", u->nick, new_room_name);
+		comando_a_usuario(u, (char*)JOIN_SUCCESS_CMD);
+		sprintf(msg_buffer, "[Server]: Creando canal '%s'\n \n", nombre_nuevo_canal);
+		mensaje_a_usuario(u, msg_buffer);
+		printf("Usuario %s se unio al nuevo canal %s.\n", u->nick, nombre_nuevo_canal);
 	}
 }
 
@@ -192,48 +189,48 @@ void broadcast(char* msg, canal* c, char* emisor) {
 }
 
 void list_users_in_room(user* u) { //Print out all the users in a user's room to the user
-	node* tmp = u->current_room->users_in_room->head;
+	node* tmp = u->canal_actual->usuarios->head;
 	user* tmp_user = NULL;
 	int user_no = 0;
 	char strbuffer[BUFFER_SIZE];
-	print_to_user(u, "All users in room:");
+	mensaje_a_usuario(u, "All users in room:");
 	while (tmp != NULL) {
 		tmp_user = (user*)(tmp->data);
 		sprintf(strbuffer, ">User %d: %s", ++user_no, tmp_user->nick);
-		print_to_user(u, strbuffer);
+		mensaje_a_usuario(u, strbuffer);
 		tmp = tmp->next;
 	}
-	print_to_user(u, " \n"); //Endline after list of users for pretty formatting.
+	mensaje_a_usuario(u, " \n"); //Endline after list of users for pretty formatting.
 }
 void list_server_users(user* u) {
 	node* tmp = all_users->head;
 	user* tmp_user = NULL;
 	int user_no = 0;
 	char strbuffer[BUFFER_SIZE];
-	print_to_user(u, "All users on server:");
+	mensaje_a_usuario(u, "All users on server:");
 	while (tmp != NULL) {
 		tmp_user = (user*)(tmp->data);
-		sprintf(strbuffer, ">User %d: %s in room %s", ++user_no, tmp_user->nick, tmp_user->current_room->room_name);
-		print_to_user(u, strbuffer);
+		sprintf(strbuffer, ">User %d: %s in room %s", ++user_no, tmp_user->nick, tmp_user->canal_actual->room_name);
+		mensaje_a_usuario(u, strbuffer);
 		tmp = tmp->next;
 	}
-	print_to_user(u, " \n"); //Endline after list of users for pretty formatting.
+	mensaje_a_usuario(u, " \n"); //Endline after list of users for pretty formatting.
 }
 void list_all_rooms(user* u) {
 	node* tmp = all_chat_rooms->head;
 	chat_room* tmp_room = NULL;
 	int room_no = 0;
 	char strbuffer[BUFFER_SIZE];
-	print_to_user(u, "All chat rooms on server:");
+	mensaje_a_usuario(u, "All chat rooms on server:");
 	while (tmp != NULL) {
 		tmp_room = (chat_room*)tmp->data;
 		sprintf(strbuffer, ">Room %d: %s", ++room_no, tmp_room->room_name);
-		print_to_user(u, strbuffer);
+		mensaje_a_usuario(u, strbuffer);
 		tmp = tmp->next;
 	}
-	print_to_user(u, " \n");
+	mensaje_a_usuario(u, " \n");
 }
-void print_to_user(user* u, char* msg) {
+void mensaje_a_usuario(user* u, char* msg) {
 	char buffer[BUFFER_SIZE];
 	sprintf(buffer, "%s %s", PRINT_CMD, msg);
 	int err = -1;
@@ -241,14 +238,14 @@ void print_to_user(user* u, char* msg) {
 	err = send(u->user_socket, buffer, strlen(buffer) + 1, 0);
 	pthread_mutex_unlock(&(u->user_sock_mutex));
 	if (err < 0)
-		printf("Error in 'print_to_user' function.\nError: %s\n", strerror(errno));
+		printf("Error in 'mensaje_a_usuario' function.\nError: %s\n", strerror(errno));
 	else if (err == 0) {
-		printf("Error in 'print_to_user': 0 bytes written.\nError: %s\n", strerror(errno));
+		printf("Error in 'mensaje_a_usuario': 0 bytes written.\nError: %s\n", strerror(errno));
 	}
 }
-void print_raw_to_user(user* u, char* msg) {
+void comando_a_usuario(user* u, char* msg) {
 	if (msg == NULL || strlen(msg) <=0) {
-		printf("Error: NULL or 0-length message in print_raw_to_user()\n");
+		printf("Error: NULL or 0-length message in comando_a_usuario()\n");
 		return;
 	}
 	int err = -1;
@@ -257,11 +254,11 @@ void print_raw_to_user(user* u, char* msg) {
 	pthread_mutex_unlock(&(u->user_sock_mutex));
 	
 	if (err < 0)
-		printf("Error sending in 'print_raw_to_user' function.\nError: %s\n", strerror(errno));
+		printf("Error sending in 'comando_a_usuario' function.\nError: %s\n", strerror(errno));
 	else if (err == 0)
-		printf("Error sending in 'print_raw_to_user': 0 bytes written.\nError: %s\n", strerror(errno));
+		printf("Error sending in 'comando_a_usuario': 0 bytes written.\nError: %s\n", strerror(errno));
 }
-chat_room* chat_room_exists(char* chat_room_name) {
+chat_room* canal_existe(char* chat_room_name) {
 	node* tmp = all_chat_rooms->head;
 	while (tmp != NULL) {
 		if (strcasecmp(((chat_room*)(tmp->data))->room_name, chat_room_name)==0)
