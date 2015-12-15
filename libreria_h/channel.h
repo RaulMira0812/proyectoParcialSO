@@ -42,7 +42,7 @@ void agrega_usuario(usuario* u, char* c); //Agrega usuario u al canal c si exist
 
 void chat_room_loop(usuario* u);//Receive-act on commands from client
 
-void ejecuta_comando(char* msg, usuario* u); //Ejecuta un comando que recibe del chat de usuario
+void ejecuta_comando(char* cmd, usuario* u); //Ejecuta un comando que recibe del chat de usuario
 
 void broadcast(char* msg, canal* c, char* emisor); //envia un broadcast todos los usuarios en el canal
 
