@@ -1,5 +1,6 @@
-#ifndef _lista
-#define _lista
+
+#ifndef _LISTA
+#define _LISTA
 
 #include <stdlib.h>
 #include <stdbool.h>
