@@ -11,7 +11,7 @@ void iniciar_canales() {
 	}
 	if (canal_espera == NULL) {
 		canal_espera = nuevo_canal((char*)nombre_canal_espera); 
-		agregar_nodos(canales, (void*)canal_espera); 
+		agregar_nodo(canales, (void*)canal_espera); 
 	}
 }
 
@@ -37,7 +37,7 @@ void agrega_usuario_a_espera(usuario* u) {
 	char command_buffer[BUFFER_SIZE]; 
 
 	sprintf(nuevo_prompt, "%s $ %s>", u->nickname, nombre_canal_espera); 
-	set_prompt_usuario(u, nuevo_prompt); // envia el comando prompt al usuario para forzar cambiar el prompt
+	//set_prompt_usuario(u, nuevo_prompt); // envia el comando prompt al usuario para forzar cambiar el prompt
 
 	agregar_nodo(canal_espera -> usuarios, (void*)u); 
 	u->canal_actual = canal_espera;  // el usuario actualmente esta en el lobby
@@ -88,7 +88,7 @@ void ejecuta_comando(char* cmd, usuario* u) {
 
 	if (strcmp(cmd_nombre, "MSG") == 0) { 
 		msg = (char*)(&cmd[strlen("MSG")+1]); //Obtengo el contenido del mensaje
-		trim_str(msg); 
+		//trim_str(msg); 
 		broadcast(msg, u->canal_actual, u->nickname);
 	}
 	
@@ -120,11 +120,12 @@ void agrega_usuario_canal(usuario* u, char* nombre_canal) { //Agrega el usuario 
 		mensaje_a_usuario(u, "[Server]: Usted ya se encuentra conectado a este canal!");
 		return;
 	}
+	/*
 	if (!valid_charset(nombre_canal)) {
 		mensaje_a_usuario(u, "[Server]: Nombre del canal invalido!\n"
 		"[Server]: debe ser alfanumerico o  '_', '-', '*', '&'!\n ");
 		return;
-	}
+	}*/
 	
 	canal* canal_a_entrar;
 	char* nombre_nuevo_canal; 
@@ -132,7 +133,7 @@ void agrega_usuario_canal(usuario* u, char* nombre_canal) { //Agrega el usuario 
 	char new_prompt[MAX_PROMPT_SIZE];
 	
 	sprintf(new_prompt, "%s @ %s>", u->nickname, nombre_canal);
-	set_prompt_usuario(u, new_prompt); //Setea el prompt del usuario
+	//set_prompt_usuario(u, new_prompt); //Setea el prompt del usuario
 	
 	if ( (canal_a_entrar = canal_existe(nombre_canal))) { //Verifica si el canal ya existe
 		remover_nodo(u->canal_actual->usuarios, u); //Quita al usuario del canal en que estaba anteriormente

@@ -22,7 +22,7 @@ bool validar_cadena(char* cadena) {
 	}
 	int i;
 	for (i=0; i < strlen(cadena); i++) {
-		if (!caracter_cadena(cadena[i]))
+		if (!validar_caracter(cadena[i]))
 			return false;
 	}
 	return true;

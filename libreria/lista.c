@@ -37,7 +37,7 @@ void remover_nodo(lista* l, void* valor){ //Remover un nodo de la listaa sin lib
 		return; 
 
 	if (iter->valor == valor) { //Si encuentra los datos en el primer nodo, se lo elimina
-		remove_front(l); 
+		remover_primer_nodo(l); 
 		return; 
 	}
 
