@@ -91,19 +91,39 @@ void ejecuta_comando(char* cmd, usuario* u) {
 		//trim_str(msg); 
 		broadcast(msg, u->canal_actual, u->nickname);
 	}
-	
+	else if (strcmp(cmd_nombre, "INFO")==0) { 
+		cmd_argumento = strtok(NULL, " "); //Room name is the second token
+		cmd_INFO(u,cmd_argumento);
+	}	
+	else if (strcmp(cmd_nombre, "LIST") == 0) {
+		cmd_argumento = strtok(NULL, " ");
+		cmd_LIST(u, cmd_argumento);
+	}	
+	else if (strcmp(cmd_nombre, "NICK") == 0) {
+		cmd_argumento = strtok(NULL, " ");
+		cmd_NICK(u, cmd_argumento);
+	}
+	else if (strcmp(cmd_nombre, "PRIVMSG") == 0) {
+		cmd_argumento = strtok(NULL, " ");
+		msg = strtok(NULL, " ");
+		partir_cadena(msg)
+		cmd_PRIVMSG(u, cmd_argumento,msg);
+	}
+	else if (strcmp(cmd_nombre, "USERS")==0) { //+JOIN
+		cmd_argumento = strtok(NULL, " "); //Room name is the second token
+		lista_usuarios_server(u,cmd_argumento);
+	}
+	else if (strcmp(cmd_nombre, "QUIT")==0) { //+JOIN
+		msg = strtok(NULL, " "); //Room name is the second token
+		partir_cadena(msg)
+		cmd_QUIT(u, msg);
+	}
 	else if (strcmp(cmd_nombre, "JOIN_CMD")==0) { //+JOIN
 		cmd_argumento = strtok(NULL, " "); //Room name is the second token
 		agrega_usuario_canal(u, cmd_argumento);
 	}
 	else if (strcmp(cmd_nombre, "lista_CMD") == 0) {
 		lista_usuarios(u);
-	}
-	else if (strcmp(cmd_nombre, "lista_ALL_CMD") == 0) {
-		lista_usuarios_server(u);
-	}
-	else if (strcmp(cmd_nombre, "ROOMS_CMD") == 0) {
-		lista_canales(u);
 	}
 	else {
 		printf("Received bad command from usuario '%s', sending fail msg\n", u->nickname);
@@ -160,6 +180,69 @@ void agrega_usuario_canal(usuario* u, char* nombre_canal) { //Agrega el usuario 
 		printf("Usuario %s se unio al nuevo canal %s.\n", u->nickname, nombre_nuevo_canal);
 	}
 }
+void cmd_INFO(usuario *u, char * cmd_argumento){
+
+	if(cmd_argumento == "ESPOLirc" || cmd_argumento==NULL){
+	
+		mensaje_a_usuario(u,"Servidor:APOLOIRC\nCreadores:Esrefania Lozano,Raul Mira & Henry Lasso\nVersion:1.0.0");
+	
+	}else{
+	
+		mensaje_a_usuario(u, "[Server]: Nombre del servidor invalido!\n");
+		return;
+	}
+
+}
+void cmd_NICK(usuario* u,char* cmd_argumento){
+	if (cmd_argumento == NULL || strlen(cmd_argumento) <=0) {
+		printf("Error: Argumento vacio en el commando NICK\n");
+		return;
+	}
+	if (!validar_cadena(cmd_argumento)) {
+		mensaje_a_usuario(u, "[Server]: Nombre de nick invalido!\n"
+		"[Server]: debe ser alfanumerico o  '_', '-', '*', '&'!\n ");
+		return;
+	}
+
+	char* nuevo_nick;
+	nuevo_nick = cmd_argumento;
+
+	u->nickname= nuevo_nick;
+
+	comando_a_usuario(u,(char*)"[Server]: Comando Nick ejecutado exitosamente\n");
+
+}
+
+void cmd_PRIVMSG(usuario* u, char* receptor, char* msg){
+	if (existe_usuario(receptor)){
+		
+		usuario* tmp_u;
+		
+		nodo* iter = usuarios_todos->primer_nodo;
+		
+		while (iter != NULL) {
+			tmp_u = (usuario*)iter->valor;
+			if (strcasecmp(tmp_u->nickname, receptor)==0) {
+				
+				pthread_mutex_lock(&(tmp_u->usuario_sock_mutex));
+				err = send(tmp_u->socket_usuario, msg, strlen(msg) + 1, 0);
+				pthread_mutex_unlock(&(tmp_u->usuario_sock_mutex));
+				
+				if (err < 0) {
+					printf("Error al enviar el msg %s al usuario %s\n", msg, tmp_u-> nickname);
+				}
+				break;
+			}
+			iter=iter->nodo_siguiente;
+		}
+
+	}else{
+		mensaje_a_usuario(u, "[Server]: Nick del receptor invalido!\n");
+		return;
+	}
+
+}
+
 
 
 void broadcast(char* msg, canal* c, char* emisor) {
@@ -183,6 +266,32 @@ void broadcast(char* msg, canal* c, char* emisor) {
 	}
 }
 
+void cmd_LIST(usuario* u,char * cmd_argumento) {
+	
+	nodo* tmp = canales->primer_nodo;
+	canal* canal_temporal = NULL;
+	int numero_canal = 0;
+	char strbuffer[BUFFER_SIZE];
+	
+	if(cmd_argumento == "ESPOLirc" || cmd_argumento==NULL){
+		mensaje_a_usuario(u, "Todos los canales en el servidor:");
+		
+		while (tmp != NULL) {
+			canal_temporal = (canal*)tmp->valor;
+			sprintf(strbuffer, ">Canal %d: %s", ++numero_canal, canal_temporal->nombre_canal);
+			mensaje_a_usuario(u, strbuffer);
+			tmp = tmp->nodo_siguiente;
+		}
+		mensaje_a_usuario(u, " \n");
+	}else{
+		mensaje_a_usuario(u, "[Server]: Comando LIST invalido!\n");
+		return;
+	}
+
+}
+
+
+
 void lista_usuarios(usuario* u) { //le muuestra al usuario u la lista de todos los usuarios que estan en su canal
 	nodo* tmp = u->canal_actual->usuarios->primer_nodo;
 	usuario* usuario_temporal = NULL;
@@ -198,34 +307,28 @@ void lista_usuarios(usuario* u) { //le muuestra al usuario u la lista de todos l
 	mensaje_a_usuario(u, " \n");
 }
 
-void lista_usuarios_server(usuario* u) { //le muestra al usuario u la lista de todos los usuarios en el server
-	nodo* tmp = usuarios_todos->primer_nodo;
-	usuario* usuario_temporal = NULL;
-	int numero_usuario = 0;
-	char strbuffer[BUFFER_SIZE];
-	mensaje_a_usuario(u, "Todos los usuarios en el servidor:");
-	while (tmp != NULL) {
-		usuario_temporal = (usuario*)(tmp->valor);
-sprintf(strbuffer, ">Usuario %d: %s en el canal %s", ++numero_usuario, usuario_temporal->nickname, usuario_temporal->canal_actual->nombre_canal);
-		mensaje_a_usuario(u, strbuffer);
-		tmp = tmp->nodo_siguiente;
-	}
-	mensaje_a_usuario(u, " \n"); 
+void lista_usuarios_server(usuario* u, char* cmd_argumento){ //le muestra al usuario u la lista de todos los usuarios en el server
+	if(cmd_argumento == "ESPOLirc" || cmd_argumento==NULL){
+		nodo* tmp = usuarios_todos->primer_nodo;
+		usuario* usuario_temporal = NULL;
+		int numero_usuario = 0;
+		char strbuffer[BUFFER_SIZE];
+		mensaje_a_usuario(u, "Todos los usuarios en el servidor:");
+		while (tmp != NULL) {
+			usuario_temporal = (usuario*)(tmp->valor);
+			sprintf(strbuffer, ">Usuario %d: %s en el canal %s", ++numero_usuario, usuario_temporal->nickname, usuario_temporal->canal_actual->nombre_canal);
+			mensaje_a_usuario(u, strbuffer);
+			tmp = tmp->nodo_siguiente;
+		}
+		mensaje_a_usuario(u, " \n");
+	}else{
+		mensaje_a_usuario(u, "[Server]: Nombre del servidor invalido!\n");
+		return;
+	}	
 }
 
-void lista_canales(usuario* u) {
-	nodo* tmp = canales->primer_nodo;
-	canal* canal_temporal = NULL;
-	int numero_canal = 0;
-	char strbuffer[BUFFER_SIZE];
-	mensaje_a_usuario(u, "Todos los canales en el servidor:");
-	while (tmp != NULL) {
-		canal_temporal = (canal*)tmp->valor;
-		sprintf(strbuffer, ">Room %d: %s", ++numero_canal, canal_temporal->nombre_canal);
-		mensaje_a_usuario(u, strbuffer);
-		tmp = tmp->nodo_siguiente;
-	}
-	mensaje_a_usuario(u, " \n");
+void cmd_QUIT(usuario*u, char* argumento){
+
 }
 
 void mensaje_a_usuario(usuario* u, char* msg) {

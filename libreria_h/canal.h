@@ -47,7 +47,7 @@ void broadcast(char* msg, canal* c, char* emisor); //envia un broadcast todos lo
 
 void lista_usuarios(usuario* u); //envia al usuario u la lista de todos los usuarios en el canal 
 
-void lista_canales(usuario* u); //envia al usuario u la lista de todos los canales en el server 
+void cmd_LIST(usuario* u,char * argumento); //envia al usuario u la lista de todos los canales en el server 
 
 void lista_usuarios_server(usuario* u); //envia al usuario u la lista de todos los usuarios conectados al server 
 
@@ -56,5 +56,11 @@ void mensaje_a_usuario(usuario* u, char* msg); //envia un mensaje a un usuario.
 void comando_a_usuario(usuario* u, char* msg); //envia otro tipo de comando al usuario.
 
 canal* canal_existe(char* nombre_canal); //retorna el canal si existe, caso contrario retorna nulo
+
+void cmd_INFO(usuario* u, char* argumento);
+
+void cmd_NICK(usuario* u,char* argumento);
+
+void cmd_PRIVMSG(usuario* u, char* receptor, char* msg);
 
 #endif
