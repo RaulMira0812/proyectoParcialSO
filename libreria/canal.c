@@ -110,38 +110,26 @@ void ejecuta_comando(char* cmd, usuario* u) {
 	}
 	else if (strcmp(cmd_nombre, "MOTD") == 0) {
 		cmd_argumento = strtok(NULL, " ");
-		msg = strtok(NULL, " ");
-		partir_cadena(msg);
 		cmd_MOTD(u, cmd_argumento);
 	}
 	else if (strcmp(cmd_nombre, "PART") == 0) {
 		cmd_argumento = strtok(NULL, " ");
-		msg = strtok(NULL, " ");
-		partir_cadena(msg);
 		cmd_PART(u, cmd_argumento);
 	}
 	else if (strcmp(cmd_nombre, "SETNAME") == 0) {
 		cmd_argumento = strtok(NULL, " ");
-		msg = strtok(NULL, " ");
-		partir_cadena(msg);
 		cmd_SETNAME(u, cmd_argumento);
 	}
 	else if (strcmp(cmd_nombre, "VERSION") == 0) {
 		cmd_argumento = strtok(NULL, " ");
-		msg = strtok(NULL, " ");
-		partir_cadena(msg);
 		cmd_VERSION(u, cmd_argumento);
 	}
 	else if (strcmp(cmd_nombre, "NAMES") == 0) {
 		cmd_argumento = strtok(NULL, " ");
-		msg = strtok(NULL, " ");
-		partir_cadena(msg);
 		cmd_NAMES(u, cmd_argumento);
 	}
 	else if (strcmp(cmd_nombre, "USER") == 0) {
 		cmd_argumento = strtok(NULL, " ");
-		msg = strtok(NULL, " ");
-		partir_cadena(msg);
 		cmd_USER(u, cmd_argumento);
 	}
 	else if (strcmp(cmd_nombre, "USERS")==0) { 
@@ -263,7 +251,7 @@ void cmd_VERSION(usuario* u, char* cmd_argumento){
 		mensaje_a_usuario(u,"Version: 1.0.0");
 	
 	}else{
-		mensaje_a_usuario(u, "[Server]: Nombre del servidor invalido!\n");
+		mensaje_a_usuario(u,"[Server]: Nombre del servidor invalido!\n");
 		return;
 	}
 }
@@ -458,7 +446,7 @@ void lista_usuarios_server(usuario* u, char* cmd_argumento){ //le muestra al usu
 
 void mensaje_a_usuario(usuario* u, char* msg) {
 	char buffer[BUFFER_SIZE];
-	sprintf(buffer, "%s %s", "PRINT_CMD", msg);
+	sprintf(buffer, "%s %s", "", msg);
 	int err = -1;
 	pthread_mutex_lock(&(u->usuario_sock_mutex));
 	err = send(u->socket_usuario, buffer, strlen(buffer) + 1, 0);

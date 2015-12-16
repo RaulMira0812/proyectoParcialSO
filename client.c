@@ -11,7 +11,7 @@ int main(int argc , char *argv[])
 {
     
     int sock;
-    int port=2016;
+    int port=2020;
     struct sockaddr_in direccion;
     struct hostent *host;
     int len;
@@ -57,8 +57,12 @@ int main(int argc , char *argv[])
         }
          
         puts(server_reply);
-
-        printf("Ingrese un comando: ");
+	int i;
+	for(i=0;i<1000;i++){
+	message[i]= '\0';
+	} 
+	
+	printf("Ingrese un comando: ");
         scanf("%s" , message);
          
         //Send some data
@@ -70,6 +74,7 @@ int main(int argc , char *argv[])
         if(strcmp(strtok(message, " "), "QUIT")==0){
             break;
         }
+	
     }
      
     close(sock);

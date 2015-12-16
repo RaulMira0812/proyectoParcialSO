@@ -22,7 +22,7 @@
 #define DELIMS " \t\r\n"
 #define MAX_LENGTH 1024
 #define SIZE_STR 100
-#define PUERTO 2016
+#define PUERTO 2020
 #define CONEXIONES_MAXIMAS 256
 
 #include "libreria_h/server_mutexes.h"
@@ -140,8 +140,7 @@ void* leer_comandos(usuario_info* ui){
 	//char *cmd;
 	//char line[MAX_LENGTH];
 	//char msje[SIZE_STR];
-	char* next_cmd=NULL;
-	char* tmp_cmd=NULL;
+	
 	char partial_cmd[BUFFER_SIZE];
 	char buffer[BUFFER_SIZE];
 
@@ -159,27 +158,33 @@ void* leer_comandos(usuario_info* ui){
 	partial_cmd[0]='\0';
 
 	while(1){
+		char* next_cmd=NULL;
+		char* tmp_cmd=NULL;
+
+		printf("1)%s\n",next_cmd);
+
 		quit=false;
-
-		if(next_cmd)
-			free(next_cmd);
-
-		if(tmp_cmd)
-			free(tmp_cmd);
 
 		if((recv(new_socket,buffer,BUFFER_SIZE,0))<0){
 			return NULL;
 		}
+		
+		printf("4)%s\n",partial_cmd);
 		int len = strlen(buffer);
-		strncat(partial_cmd,buffer,len);
+		printf("1.01)%s\n",buffer);
+		//strncat(partial_cmd,buffer,len);
+
 		next_cmd = (char*)malloc(sizeof(char)*(strlen(partial_cmd)+1));
 		tmp_cmd = (char*)malloc(sizeof(char)*(strlen(partial_cmd)+1));
-		strcpy(next_cmd,partial_cmd);
-		strcpy(tmp_cmd,partial_cmd);
+
+		strcpy(next_cmd,buffer);
+		printf("1.1)%s\n",next_cmd);
+
+		strcpy(tmp_cmd,buffer);
+		printf("1.2)%s\n",tmp_cmd);
+
 		partial_cmd[0]='\0';
-
-		printf("%s\n",next_cmd);
-
+		
 		usuario* usuario_actual;
 		nodo* tmp = usuarios_todos->primer_nodo; 
 		while (tmp != NULL) {
@@ -194,11 +199,21 @@ void* leer_comandos(usuario_info* ui){
 			free(ui);
 			free(next_cmd);
 			free(tmp_cmd);
+			free(buffer);
+			int j;
+			for(j=0;j<BUFFER_SIZE;j++){
+				buffer[j]= '\0';
+			} 
 			pthread_exit(NULL);
 		}else{
 			ejecuta_comando(next_cmd,usuario_actual);
+			free(tmp_cmd);
+			int j;
+			for(j=0;j<BUFFER_SIZE;j++){
+				buffer[j]= '\0';
+			} 
 		}
-
+		
 		
 	}
 	pthread_exit(NULL);
