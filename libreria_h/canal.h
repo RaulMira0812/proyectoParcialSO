@@ -1,5 +1,5 @@
-#ifndef CHAT_ROOM_H
-#define CHAT_ROOM_H
+#ifndef CANAL_H
+#define CANAL_H
 
 #include "usuario.h"
 #include "lista.h"
@@ -21,8 +21,8 @@
 
 typedef struct usuario usuario;
 
-typedef struct canal {
-	list* usuarios; //lista de usuarios en este canal
+typedef struct canal{
+	lista* usuarios; //lista de usuarios en este canal
 	char* nombre_canal; //nombre del canal
 	char* mensaje_actual; //último mensaje enviado al usuario
 	pthread_mutex_t candado; //Para asegurar exclusion mutua
@@ -45,15 +45,15 @@ void ejecuta_comando(char* cmd, usuario* u); //Ejecuta un comando que recibe del
 
 void broadcast(char* msg, canal* c, char* emisor); //envia un broadcast todos los usuarios en el canal
 
-void lista_usuarios(user* u); //envia al usuario u la lista de todos los usuarios en el canal 
+void lista_usuarios(usuario* u); //envia al usuario u la lista de todos los usuarios en el canal 
 
-void lista_canales(user* u); //envia al usuario u la lista de todos los canales en el server 
+void lista_canales(usuario* u); //envia al usuario u la lista de todos los canales en el server 
 
-void lista_usuarios_server(user* u); //envia al usuario u la lista de todos los usuarios conectados al server 
+void lista_usuarios_server(usuario* u); //envia al usuario u la lista de todos los usuarios conectados al server 
 
-void mensaje_a_usuario(user* u, char* msg); //envia un mensaje a un usuario. 
+void mensaje_a_usuario(usuario* u, char* msg); //envia un mensaje a un usuario. 
 
-void comando_a_usuario(user* u, char* msg); //envia otro tipo de comando al usuario.
+void comando_a_usuario(usuario* u, char* msg); //envia otro tipo de comando al usuario.
 
 canal* canal_existe(char* nombre_canal); //retorna el canal si existe, caso contrario retorna nulo
 

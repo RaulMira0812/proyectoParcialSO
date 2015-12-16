@@ -9,13 +9,13 @@ nodo* nuevo_nodo(void* valor) { //Agregar un nuevo nodo a la listaa
 
 lista* nueva_lista(void (*free_fnc)(void*)) {//Crear una nueva lista; free_fnc es un puntero que permite liberar datos en la listaa
 	lista* l = (lista*) malloc(sizeof(lista)); 
-	l->free_valor = free_fnc; 
+	l->free_data = free_fnc; 
 	l->primer_nodo = NULL; 
 	return l; 
 }
 
 void agregar_nodo(lista* l, void* valor) { //Agregar nodos a la listaa y retornan si 
-	nodo* new_primer_nodo = new_nodo(valor); 
+	nodo* new_primer_nodo = nuevo_nodo(valor); 
 	new_primer_nodo -> nodo_siguiente = l->primer_nodo; 
 	l->primer_nodo = new_primer_nodo; 
 }

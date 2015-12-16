@@ -1,4 +1,4 @@
-#include "../libreria/server_comandos.h"
+#include "../libreria_h/server_comandos.h"
 
 
 void partir_cadena(char* cadena) {
@@ -20,8 +20,8 @@ bool validar_cadena(char* cadena) {
 		printf("Error cadena incorrecta.\n");
 		return false;
 	}
-	
-	for (int i=0; i < strlen(cadena); i++) {
+	int i;
+	for (i=0; i < strlen(cadena); i++) {
 		if (!caracter_cadena(cadena[i]))
 			return false;
 	}

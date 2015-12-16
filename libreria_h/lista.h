@@ -1,5 +1,5 @@
-#ifndef _LIST
-#define _LIST
+#ifndef _lista
+#define _lista
 
 #include <stdlib.h>
 #include <stdbool.h>
@@ -9,9 +9,9 @@ typedef struct nodo_struct nodo; //El nodo de cada lista
 typedef struct nodo_struct { //La estructura del nodo
 
 	void* valor; 
-	node* nodo_siguiente; 
+	nodo* nodo_siguiente; 
 
-} nodo_strc; 
+}nodo; 
 
 typedef struct { //La estructura de la lista
 

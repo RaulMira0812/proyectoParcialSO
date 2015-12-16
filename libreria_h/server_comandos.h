@@ -1,5 +1,5 @@
-#ifndef SERVER_COMMANDS
-#define SERVER_COMMANDS
+#ifndef SERVER_COMANDOS
+#define SERVER_COMANDOS
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -19,5 +19,7 @@ bool validar_caracter(char c);
 
 //obtener comando
 char* obtener_sgt_cmd(int socket, char* cmd, bool* err);
+
+#endif
 
 

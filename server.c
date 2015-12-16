@@ -11,12 +11,11 @@
 #include <pthread.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-
+#include <netdb.h>
 #include <signal.h>
 #include <unistd.h>
 #include <stdbool.h>
 #include <errno.h>
-#include <linux/in.h>
 
 
 //#include "libreria_h/server_commands.h"
@@ -26,7 +25,13 @@
 #define PUERTO 2016
 #define CONEXIONES_MAXIMAS 256
 
-//#include "libreria_h/list.h"
+#include "libreria_h/server_mutexes.h"
+#include "libreria_h/usuario.h"
+#include "libreria_h/canal.h"
+#include "libreria_h/server_comandos.h"
+#include "libreria_h/constantes.h"
+
+
 
 //Al aceptar un cliente, debemos comenzar un nuevo hilo para continuar aceptando clientes. 
 //Necesitamos esta estructura para la informacion principal del cliente
@@ -39,7 +44,7 @@ int aceptar_conexion(int socket);
 void* leer_comandos(usuario_info* ui);
 int crear_conexion(int puerto);
 //char* parse_connect_cmd(char* cmd, bool* quit); //Returns the nick for connect cmd
-//void wait_for_connect_cmd(user_info* client_socket); //Un nuevo hilo es creado para la conexion del socket
+//void wait_for_connect_cmd(usuario_info* client_socket); //Un nuevo hilo es creado para la conexion del socket
 //void catch_broken_pipe(int signum); 
 
 int main(int argc, char** argv) {
@@ -64,18 +69,13 @@ int main(int argc, char** argv) {
 	//signal(SIGPIPE, catch_broken_pipe); 
 
 	//Init mutexes used 
-	//init_mutexes(); 
+	inicializar_mutexes(); 
 
-	//Init list of users to empty list
-	//init_user_list(); 
+	//Init lista of usuarios to empty lista
+	inicializar_lista_usuarios(); 
 
-	//Init list of chat rooms to empty list, instantiate lobby chat room
-	//init_chat_rooms(); 
-
-	//Start loop to accept clients	
-
-	//Inicializamos la variable usuario
-	
+	//Init lista of chat rooms to empty lista, instantiate lobby chat room
+	iniciar_canales(); 
 	
 	while((cliente=aceptar_conexion(socket_server))){
 		if(cliente==-1){
@@ -141,15 +141,13 @@ void* leer_comandos(usuario_info* ui){
 	char line[MAX_LENGTH];
 	char msje[SIZE_STR];
 
-	int user_thread=ui->hilo;
+	int usuario_thread=ui->hilo;
 	int new_socket=ui->socket;
 
 	char nick[20];
 	sprintf(nick,"usuario_%d",new_socket);
 	if(!existe_usuario(nick))
-		inicializar_usuario(nick,new_socket,user_thread);
-
-	
+		inicializar_usuario(nick,new_socket,usuario_thread);
 
 	memset(msje,'\0',SIZE_STR);
 	strcpy(msje,"Bienvenido a APOLO-IRC ");

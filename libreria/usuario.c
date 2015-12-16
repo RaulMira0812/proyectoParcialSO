@@ -3,7 +3,7 @@
 pthread_mutex_t sock_mutex; //garantiza que dos hilos no se sobreescriban 
 
 void inicializar_lista_usuarios() {	//Si la lista de usuarios no se ha inicializado, se crea una lista vacia
-	usuarios_todos = nueva_lista((void(*)(void*))free_user);
+	usuarios_todos = nueva_lista((void(*)(void*))liberar_usuario);
 }
 
 void inicializar_usuario(char* nickname, int sock, pthread_t hilo_usuario){
@@ -40,13 +40,13 @@ void remover_usuario(usuario* u) {
 	liberar_usuario(u); 
 }
 
-
+/*
 void set_prompt_usuario(usuario* u, char* nuevo_prompt) {
 	char msg_a_cliente[BUFFER_SIZE];
 	int bytes_written;
 	sprintf(msg_a_client, "%s %s", SET_PROMPT_CMD, nuevo_prompt);
 	pthread_mutex_lock(&(u->usuario_sock_mutex)); 
-	bytes_written = send(u->usuario_socket, msg_a_cliente, strlen(msg_a_cliente) + 1, 0);
+	bytes_written = send(u->socket_usuario, msg_a_cliente, strlen(msg_a_cliente) + 1, 0);
 	pthread_mutex_unlock(&(u->usuario_sock_mutex));
 	if (bytes_written < 0) {
 		printf("Error al enviar el nuevo prompt.\nError: %s\n", strerror(errno));
@@ -55,12 +55,13 @@ void set_prompt_usuario(usuario* u, char* nuevo_prompt) {
 		printf("Error al enviar el nuevo prompt: 0 bytes written.\nError: %s\n", strerror(errno));
 	}
 }
+*/
 bool existe_usuario(char* nick) {
 	usuario* tmp_u;
 	bool existe = false;
 	nodo* iter = usuarios_todos->primer_nodo;
 	while (iter != NULL) {
-		tmp_u = (usuario*)iter->data;
+		tmp_u = (usuario*)iter->valor;
 		if (strcasecmp(tmp_u->nickname, nick)==0) {
 			existe = true;
 			break;

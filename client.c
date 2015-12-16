@@ -32,7 +32,7 @@ int main(int argc , char *argv[])
         return -4;
     }
 
-    memcpy(&direccion.sin_addr.s_addr,host->h_addr_list[0],host->h_length);
+    memcpy(&direccion.sin_addr.s_addr,host->h_addr_lista[0],host->h_length);
 */
     //Connect to remote server
     if (connect(sock , (struct sockaddr *)&direccion , sizeof(direccion)))

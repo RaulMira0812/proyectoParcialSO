@@ -1,13 +1,13 @@
-#include "../include/canal.h"
+#include "../libreria_h/canal.h"
 
 static const char* nombre_canal_espera = "LOBBY"; //Nombre del canal de espera
-static list* canales = NULL; //lista de todos los canales
+static lista* canales = NULL; //lista de todos los canales
 static canal* canal_espera = NULL; //canal de espera (lobby)
 
 void iniciar_canales() {
 
 	if (canales == NULL) {
-		canales = new_list((void(*)(void*))liberar_canal); 
+		canales = nueva_lista((void(*)(void*))liberar_canal); 
 	}
 	if (canal_espera == NULL) {
 		canal_espera = nuevo_canal((char*)nombre_canal_espera); 
@@ -42,12 +42,12 @@ void agrega_usuario_a_espera(usuario* u) {
 	agregar_nodo(canal_espera -> usuarios, (void*)u); 
 	u->canal_actual = canal_espera;  // el usuario actualmente esta en el lobby
 
-	comando_a_usuario(u, (char*)JOIN_SUCCESS_CMD); 
+	comando_a_usuario(u, (char*)"JOIN_SUCCESS_CMD"); 
 	sprintf(command_buffer, "+PRINT [Server]: Conectado como usuario '%s'.\n[Server]: Ingresando al lobby.\n \n", u->nickname); 
 	comando_a_usuario(u, command_buffer); 
-	canal_loop(u); 
+	//canal_loop(u); 
 }
-
+/*
 void canal_loop(usuario* u) {
 	char fraccion_de_comando[BUFFER_SIZE];
 	char* siguiente_comando = NULL; 	
@@ -77,7 +77,7 @@ printf("Error al leer el mensaje del cliente.\nCerrando el socket #%d al cliente
 			ejecuta_comando(siguiente_comando, u); 
 		}
 	}
-}
+}*/
 
 void ejecuta_comando(char* cmd, usuario* u) {
 	char* cmd_nombre = NULL;
@@ -91,29 +91,23 @@ void ejecuta_comando(char* cmd, usuario* u) {
 		trim_str(msg); 
 		broadcast(msg, u->canal_actual, u->nickname);
 	}
-	else if (strcmp(cmd_nombre, "PRIVMSG")==0) { //+JOIN
-		receptor = (char*)(&cmd[strlen("PRIVMSG")+1]);
-		msg = (char*)(&cmd[strlen("PRIVMSG")+1]);
+	
+	else if (strcmp(cmd_nombre, "JOIN_CMD")==0) { //+JOIN
 		cmd_argumento = strtok(NULL, " "); //Room name is the second token
 		agrega_usuario_canal(u, cmd_argumento);
 	}
-
-	else if (strcmp(cmd_nombre, JOIN_CMD)==0) { //+JOIN
-		cmd_argumento = strtok(NULL, " "); //Room name is the second token
-		agrega_usuario_canal(u, cmd_argumento);
-	}
-	else if (strcmp(cmd_nombre, LIST_CMD) == 0) {
+	else if (strcmp(cmd_nombre, "lista_CMD") == 0) {
 		lista_usuarios(u);
 	}
-	else if (strcmp(cmd_nombre, LIST_ALL_CMD) == 0) {
+	else if (strcmp(cmd_nombre, "lista_ALL_CMD") == 0) {
 		lista_usuarios_server(u);
 	}
-	else if (strcmp(cmd_nombre, ROOMS_CMD) == 0) {
+	else if (strcmp(cmd_nombre, "ROOMS_CMD") == 0) {
 		lista_canales(u);
 	}
 	else {
 		printf("Received bad command from usuario '%s', sending fail msg\n", u->nickname);
-		comando_a_usuario(u, (char*)FAIL_CMD);
+		comando_a_usuario(u, (char*)"FAIL_CMD");
 	}
 }
 
@@ -145,7 +139,7 @@ void agrega_usuario_canal(usuario* u, char* nombre_canal) { //Agrega el usuario 
 		u->canal_actual = canal_a_entrar; //agrega al usuario al canal actual
 		agregar_nodo(canal_a_entrar->usuarios, (void*)u); //agrega al usuario a la lista de usuarios de dicho canal
 		//Si se pudo agregar al usuario al canal le enviamos un mensaje de exito
-		comando_a_usuario(u, (char*)JOIN_SUCCESS_CMD);
+		comando_a_usuario(u, (char*)"JOIN_SUCCESS_CMD");
 		sprintf(msg_buffer, "[Server]: Uniendose al canal '%s'\n \n", canal_a_entrar->nombre_canal);
 		mensaje_a_usuario(u, msg_buffer); //Envia el mensaje al usuario
 		printf("Usuario %s se unio al canal %s.\n", u->nickname, canal_a_entrar->nombre_canal);
@@ -159,7 +153,7 @@ void agrega_usuario_canal(usuario* u, char* nombre_canal) { //Agrega el usuario 
 		remover_nodo(u->canal_actual->usuarios, u); //elimina al usuario del antiguo canal que estaba
 		u->canal_actual = canal_a_entrar; //define el canal del usuario al que se acabo de unir
 		//If we successfully added usuario to room, send success command
-		comando_a_usuario(u, (char*)JOIN_SUCCESS_CMD);
+		comando_a_usuario(u, (char*)"JOIN_SUCCESS_CMD");
 		sprintf(msg_buffer, "[Server]: Creando canal '%s'\n \n", nombre_nuevo_canal);
 		mensaje_a_usuario(u, msg_buffer);
 		printf("Usuario %s se unio al nuevo canal %s.\n", u->nickname, nombre_nuevo_canal);
@@ -204,7 +198,7 @@ void lista_usuarios(usuario* u) { //le muuestra al usuario u la lista de todos l
 }
 
 void lista_usuarios_server(usuario* u) { //le muestra al usuario u la lista de todos los usuarios en el server
-	nodo* tmp = usuarios_todos->head;
+	nodo* tmp = usuarios_todos->primer_nodo;
 	usuario* usuario_temporal = NULL;
 	int numero_usuario = 0;
 	char strbuffer[BUFFER_SIZE];
@@ -219,7 +213,7 @@ sprintf(strbuffer, ">Usuario %d: %s en el canal %s", ++numero_usuario, usuario_t
 }
 
 void lista_canales(usuario* u) {
-	nodo* tmp = canales->head;
+	nodo* tmp = canales->primer_nodo;
 	canal* canal_temporal = NULL;
 	int numero_canal = 0;
 	char strbuffer[BUFFER_SIZE];
@@ -235,7 +229,7 @@ void lista_canales(usuario* u) {
 
 void mensaje_a_usuario(usuario* u, char* msg) {
 	char buffer[BUFFER_SIZE];
-	sprintf(buffer, "%s %s", PRINT_CMD, msg);
+	sprintf(buffer, "%s %s", "PRINT_CMD", msg);
 	int err = -1;
 	pthread_mutex_lock(&(u->usuario_sock_mutex));
 	err = send(u->socket_usuario, buffer, strlen(buffer) + 1, 0);

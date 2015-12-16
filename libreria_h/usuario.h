@@ -1,5 +1,5 @@
-#ifndef USERS_H
-#define USERS_H
+#ifndef USUARIO_H
+#define USUARIO_H
 
 #include "canal.h"
 #include "lista.h"
@@ -15,17 +15,19 @@
 
 typedef struct chat_room_struct chat_room;
 
-struct usuario_struct {
+typedef struct canal canal; //El nodo de cada lista
+
+typedef struct usuario {
 	char* nickname;
 	pthread_t hilo_usuario; //cada usuario tiene asignado un hilo unico
 	int socket_usuario;
 	canal* canal_actual;
 	pthread_mutex_t usuario_sock_mutex;
-};
+}usuario;
 
-typedef struct usuario_struct usuario;
+//typedef struct usuario_struct usuario;
 
-lista* usuario_todos; //Lista de todos los usuarios.
+lista* usuarios_todos; //lista de todos los usuarios.
 
 void inicializar_lista_usuarios(); //Crear una lista vacia de usuarios 
 
@@ -38,4 +40,5 @@ void liberar_usuario(usuario* u); //Libero los datos pertenecientes a un usuario
 void remover_usuario(usuario* u); //remover el usuario de la lista de todos los usuarios y del canal actual.
 
 bool existe_usuario(char* nickname); //Verificar si el usuario se encuentra en la lista de todos los usuarios
+
 #endif
