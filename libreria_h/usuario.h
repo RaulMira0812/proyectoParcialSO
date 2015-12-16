@@ -19,6 +19,9 @@ typedef struct canal canal; //El nodo de cada lista
 
 typedef struct usuario {
 	char* nickname;
+	char* nombre_real;
+	char* hostname;
+	char* server_name
 	pthread_t hilo_usuario; //cada usuario tiene asignado un hilo unico
 	int socket_usuario;
 	canal* canal_actual;

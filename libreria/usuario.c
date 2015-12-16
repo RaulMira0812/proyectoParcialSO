@@ -11,6 +11,9 @@ void inicializar_usuario(char* nickname, int sock, pthread_t hilo_usuario){
 	nuevo_usuario->socket_usuario = sock;
 	nuevo_usuario->canal_actual = NULL;
 	nuevo_usuario->nickname = nickname;
+                    nuevo_usuario->nombre_real = "";
+	nuevo_usuario->hostname = "";
+                    nuevo_usuario->server_name = "ESPOLirc";
 	nuevo_usuario->hilo_usuario = hilo_usuario;
 	pthread_mutex_init(&(nuevo_usuario->usuario_sock_mutex), NULL);
 	

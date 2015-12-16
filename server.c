@@ -150,7 +150,7 @@ void* leer_comandos(usuario_info* ui){
 		inicializar_usuario(nick,new_socket,usuario_thread);
 
 	memset(msje,'\0',SIZE_STR);
-	strcpy(msje,"Bienvenido a APOLO-IRC ");
+	strcpy(msje,"Bienvenido a-IRC ");
 	strcpy(msje,nick);
 	strcpy(msje,"\n");
 	send(ui->socket,msje,strlen(nick),0);
