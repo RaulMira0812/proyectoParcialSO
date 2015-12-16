@@ -50,7 +50,7 @@ int main(int argc , char *argv[])
     while(1)
     {
         //Receive a reply from the server
-        if( recv(sock , server_reply , 2000 , 0) < 0)
+        while( recv(sock , server_reply , 2000 , 0) <0)
         {
             puts("recv failed");
             break;
@@ -67,9 +67,9 @@ int main(int argc , char *argv[])
             puts("Envio fallido");
             return 1;
         }
-         
-        
-        puts("Bienvenido cliente");
+        if(strcmp(strtok(message, " "), "QUIT")==0){
+            break;
+        }
     }
      
     close(sock);

@@ -42,9 +42,8 @@ void agrega_usuario_a_espera(usuario* u) {
 	agregar_nodo(canal_espera -> usuarios, (void*)u); 
 	u->canal_actual = canal_espera;  // el usuario actualmente esta en el lobby
 
-	comando_a_usuario(u, (char*)"JOIN_SUCCESS_CMD"); 
-	sprintf(command_buffer, "+PRINT [Server]: Conectado como usuario '%s'.\n[Server]: Ingresando al lobby.\n \n", u->nickname); 
-	comando_a_usuario(u, command_buffer); 
+	sprintf(command_buffer, "JOIN_SUCCESS_CMD\n+PRINT [Server]: Conectado como usuario '%s'.\n[Server]: Ingresando al lobby.\n \n", u->nickname); 
+	comando_a_usuario(u,command_buffer); 
 	//canal_loop(u); 
 }
 /*
@@ -106,53 +105,48 @@ void ejecuta_comando(char* cmd, usuario* u) {
 	else if (strcmp(cmd_nombre, "PRIVMSG") == 0) {
 		cmd_argumento = strtok(NULL, " ");
 		msg = strtok(NULL, " ");
-		partir_cadena(msg)
+		partir_cadena(msg);
 		cmd_PRIVMSG(u, cmd_argumento,msg);
 	}
 	else if (strcmp(cmd_nombre, "MOTD") == 0) {
 		cmd_argumento = strtok(NULL, " ");
 		msg = strtok(NULL, " ");
-		partir_cadena(msg)
+		partir_cadena(msg);
 		cmd_MOTD(u, cmd_argumento);
 	}
 	else if (strcmp(cmd_nombre, "PART") == 0) {
 		cmd_argumento = strtok(NULL, " ");
 		msg = strtok(NULL, " ");
-		partir_cadena(msg)
+		partir_cadena(msg);
 		cmd_PART(u, cmd_argumento);
 	}
 	else if (strcmp(cmd_nombre, "SETNAME") == 0) {
 		cmd_argumento = strtok(NULL, " ");
 		msg = strtok(NULL, " ");
-		partir_cadena(msg)
+		partir_cadena(msg);
 		cmd_SETNAME(u, cmd_argumento);
 	}
 	else if (strcmp(cmd_nombre, "VERSION") == 0) {
 		cmd_argumento = strtok(NULL, " ");
 		msg = strtok(NULL, " ");
-		partir_cadena(msg)
+		partir_cadena(msg);
 		cmd_VERSION(u, cmd_argumento);
 	}
 	else if (strcmp(cmd_nombre, "NAMES") == 0) {
 		cmd_argumento = strtok(NULL, " ");
 		msg = strtok(NULL, " ");
-		partir_cadena(msg)
+		partir_cadena(msg);
 		cmd_NAMES(u, cmd_argumento);
 	}
 	else if (strcmp(cmd_nombre, "USER") == 0) {
 		cmd_argumento = strtok(NULL, " ");
 		msg = strtok(NULL, " ");
-		partir_cadena(msg)
+		partir_cadena(msg);
 		cmd_USER(u, cmd_argumento);
 	}
 	else if (strcmp(cmd_nombre, "USERS")==0) { 
 		cmd_argumento = strtok(NULL, " ");
 		lista_usuarios_server(u,cmd_argumento);
-	}
-	else if (strcmp(cmd_nombre, "QUIT")==0) { 
-		msg = strtok(NULL, " ");
-		partir_cadena(msg)
-		cmd_QUIT(u, msg);
 	}
 	else if (strcmp(cmd_nombre, "JOIN")==0) { //+JOIN
 		cmd_argumento = strtok(NULL, " "); //el canal es el segundo token
@@ -220,11 +214,11 @@ void cmd_JOIN(usuario* u, char* nombre_canal) { //Agrega el usuario u al canal s
 void cmd_MOTD(usuario* u, char* cmd_argumento){
 	char buffer[BUFFER_SIZE];
 	if (cmd_argumento == "ESPOLirc" || cmd_argumento==NULL){
-		buffer="*************** Bienvenido a linux Espol-irc 1.0.0 #1 ***************\n"
-		              "Documentation:  https://github.com/RaulMira0812/proyectoParcialSO\n"	
-		              "******************************************************************\n"
-		              "----------------------- Please respect the server usage policy ----------------------\n"
-		comando_a_usuario(u,(char*)buffer);	
+		sprintf(buffer,"*************** Bienvenido a linux Espol-irc 1.0.0 #1 ***************\n"
+						"Documentation:  https://github.com/RaulMira0812/proyectoParcialSO\n"	
+						"******************************************************************\n"
+						"--------- Please respect the server usage policy ---------------\n");
+		comando_a_usuario(u,buffer);	
 	}else{
 		mensaje_a_usuario(u, "[Server]: Nombre del servidor invalido!\n");
 		return;
@@ -232,17 +226,19 @@ void cmd_MOTD(usuario* u, char* cmd_argumento){
 }
 
 void cmd_PART(usuario* u, char* cmd_argumento){
+	canal* canal_a_entrar=canal_espera;
 	char buffer[BUFFER_SIZE];
 	char msg_buffer[BUFFER_SIZE];
 	if (cmd_argumento==NULL){ // si no especifica argumento se desconecta del canal en que se encuentra y envia mensaje por defecto	
 		sprintf(buffer, "[Server]: el usuario '%s' ha salido del canal \n", u->nickname);
 	}else{
-		buffer=cmd_argumento; //envia el mensaje del usuario
+		strcpy(buffer,cmd_argumento);
+		//buffer=cmd_argumento; //envia el mensaje del usuario
 	}
 	broadcast(buffer, u->canal_actual, u->nickname);
 	u->canal_actual= NULL; //lo desconecto del canal en que estaba
 	remover_nodo(u->canal_actual->usuarios, u); //Quita al usuario del canal en que estaba anteriormente
-	agregar_usuario_a_espera(u); //agrega al usuario al canal de espera o lobby
+	agrega_usuario_a_espera(u); //agrega al usuario al canal de espera o lobby
 	comando_a_usuario(u, (char*)"JOIN_SUCCESS_CMD");
 	sprintf(msg_buffer, "[Server]: Uniendose al canal '%s'\n \n", canal_a_entrar->nombre_canal);
 	mensaje_a_usuario(u, msg_buffer); //Envia el mensaje al usuario
@@ -296,7 +292,7 @@ void cmd_NAMES(usuario* u, char* cmd_argumento){
 	char msg_buffer[BUFFER_SIZE];	
 	canal* canal_esp;
 	if(cmd_argumento!=NULL){ //muestra los usuarios en el canal especificado
-		canal_esp = canal_existe(char* nombre_canal);	
+		canal_esp = canal_existe(cmd_argumento);	//OJO 
 	}else{ 	canal_esp = u->canal_actual;	
 	}
 		if(canal_esp==NULL){	
@@ -304,11 +300,16 @@ void cmd_NAMES(usuario* u, char* cmd_argumento){
 			return ;} //el canal no existe}
 		int i;		
 		mensaje_a_usuario(u,"Lista de usuarios en el canal especificado:\n");
-		for(i=0; i<strlen(canal_esp->usuarios); i++){
-			sprintf(msg_buffer, "[Server]: Usuario '%i' : '%s' \n", i, canal_esp->usuarios[i] );
-			mensaje_a_usuario(u, msg_buffer); //Envia el mensaje al usuario
-		}
 
+		int cnt=0;
+		nodo* tmp = canal_esp->usuarios->primer_nodo; 
+		while (tmp != NULL) {
+			usuario* tmp_u = (usuario*)tmp->valor;
+			sprintf(msg_buffer, "[Server]: Usuario '%d' : '%s' \n",cnt,tmp_u->nickname);
+			mensaje_a_usuario(u, msg_buffer); //Envia el mensaje al usuario
+			cnt++; 
+			tmp = tmp->nodo_siguiente; 
+		}
 
 }
 
@@ -316,7 +317,7 @@ void cmd_INFO(usuario* u, char* cmd_argumento){
 
 	if(cmd_argumento == "ESPOLirc" || cmd_argumento==NULL){
 	
-		mensaje_a_usuario(u,"Servidor:EspolIRC\nCreadores:Esrefania Lozano,Raul Mira & Henry Lasso\nVersion:1.0.0");
+		mensaje_a_usuario(u,"Servidor:EspolIRC\nCreadores:Estefania Lozano,Raul Mira & Henry Lasso\nVersion:1.0.0");
 	
 	}else{
 	
@@ -351,7 +352,7 @@ void cmd_PRIVMSG(usuario* u, char* receptor, char* msg){
 		usuario* tmp_u;
 		
 		nodo* iter = usuarios_todos->primer_nodo;
-		
+		int err = -1;
 		while (iter != NULL) {
 			tmp_u = (usuario*)iter->valor;
 			if (strcasecmp(tmp_u->nickname, receptor)==0) {
@@ -417,7 +418,6 @@ void cmd_LIST(usuario* u,char * cmd_argumento) {
 		mensaje_a_usuario(u, "[Server]: Comando LIST invalido!\n");
 		return;
 	}
-
 }
 
 void lista_usuarios(usuario* u) { //le muestra al usuario u la lista de todos los usuarios que estan en su canal
@@ -455,9 +455,6 @@ void lista_usuarios_server(usuario* u, char* cmd_argumento){ //le muestra al usu
 	}	
 }
 
-void cmd_QUIT(usuario*u, char* argumento){
-
-}
 
 void mensaje_a_usuario(usuario* u, char* msg) {
 	char buffer[BUFFER_SIZE];
@@ -472,6 +469,7 @@ void mensaje_a_usuario(usuario* u, char* msg) {
 		printf("Error en 'mensaje_a_usuario': 0 bytes escritos.\nError: %s\n", strerror(errno));
 	}
 }
+
 void comando_a_usuario(usuario* u, char* msg) {
 	if (msg == NULL || strlen(msg) <=0) {
 		printf("Error: NULL o mensaje vacio en comando_a_usuario()\n");

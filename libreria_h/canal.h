@@ -45,7 +45,7 @@ void broadcast(char* msg, canal* c, char* emisor); //envia un broadcast todos lo
 
 void lista_usuarios(usuario* u); //envia al usuario u la lista de todos los usuarios en el canal 
 
-void lista_usuarios_server(usuario* u); //envia al usuario u la lista de todos los usuarios conectados al server 
+void lista_usuarios_server(usuario* u, char* cmd_argumento); //envia al usuario u la lista de todos los usuarios conectados al server 
 
 void mensaje_a_usuario(usuario* u, char* msg); //envia un mensaje a un usuario. 
 
@@ -74,5 +74,7 @@ void cmd_VERSION(usuario* u, char* cmd_argumento);
 void cmd_NAMES(usuario* u, char* cmd_argumento);
 
 void cmd_USER(usuario* u, char* cmd_argumento);
+
+
 
 #endif

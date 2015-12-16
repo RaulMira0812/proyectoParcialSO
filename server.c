@@ -85,9 +85,8 @@ int main(int argc, char** argv) {
 			usuario = (usuario_info*)malloc(sizeof(usuario_info));//memoria
 			usuario->socket=cliente;//socket
 			int a=pthread_create(&(usuario->hilo),NULL, (void*)&leer_comandos, (usuario_info*)(usuario));//hilo
-			printf("que paso?:%d\n",a);
+			//printf("que paso?:%d\n",a);
 		}
-		printf("d");		
 	}
 
 	return EXIT_SUCCESS;
@@ -137,49 +136,70 @@ int crear_conexion(int puerto){
 }
 
 void* leer_comandos(usuario_info* ui){
-	char *cmd;
-	char line[MAX_LENGTH];
-	char msje[SIZE_STR];
+
+	//char *cmd;
+	//char line[MAX_LENGTH];
+	//char msje[SIZE_STR];
+	char* next_cmd=NULL;
+	char* tmp_cmd=NULL;
+	char partial_cmd[BUFFER_SIZE];
+	char buffer[BUFFER_SIZE];
 
 	int usuario_thread=ui->hilo;
 	int new_socket=ui->socket;
+	bool *err=false;
+
+	bool quit=false;
 
 	char nick[20];
 	sprintf(nick,"usuario_%d",new_socket);
 	if(!existe_usuario(nick))
 		inicializar_usuario(nick,new_socket,usuario_thread);
 
-	memset(msje,'\0',SIZE_STR);
-	strcpy(msje,"Bienvenido a-IRC ");
-	strcpy(msje,nick);
-	strcpy(msje,"\n");
-	send(ui->socket,msje,strlen(nick),0);
-
-	
+	partial_cmd[0]='\0';
 
 	while(1){
+		quit=false;
 
-		//memset(msje,'\0',SIZE_STR);
-		//recv(new_socket,msje,30,0);
-		//printf("%s\n",msje);
+		if(next_cmd)
+			free(next_cmd);
 
-/*
-		if(!fgets(line,MAX_LENGTH,stdin))
-			printf("1");
-			break;
-		if((cmd= strtok(line,DELIMS))){
-			printf("2");
-			errno=0;
-			if(strcmp(cmd,"iniciar")==0){
-				memset(msje,'\0',SIZE_STR);
-				strcpy(msje,"SERVER INICIA");
-				send(ui->socket,msje,strlen(msje),0);
-			}else if(strcmp(cmd,"salir")==0){
-				raise(SIGINT);
-			}
-			printf("3");
-			if(errno) perror("Error: el comando ingresado tuvo un error");
-		}*/
+		if(tmp_cmd)
+			free(tmp_cmd);
+
+		if((recv(new_socket,buffer,BUFFER_SIZE,0))<0){
+			return NULL;
+		}
+		int len = strlen(buffer);
+		strncat(partial_cmd,buffer,len);
+		next_cmd = (char*)malloc(sizeof(char)*(strlen(partial_cmd)+1));
+		tmp_cmd = (char*)malloc(sizeof(char)*(strlen(partial_cmd)+1));
+		strcpy(next_cmd,partial_cmd);
+		strcpy(tmp_cmd,partial_cmd);
+		partial_cmd[0]='\0';
+
+		printf("%s\n",next_cmd);
+
+		usuario* usuario_actual;
+		nodo* tmp = usuarios_todos->primer_nodo; 
+		while (tmp != NULL) {
+			usuario* tmp_u = (usuario*)tmp->valor;
+			if(tmp_u->nickname == nick)
+				usuario_actual=tmp_u;
+			tmp = tmp->nodo_siguiente; 
+		}
+		if (strcmp(strtok(tmp_cmd, " "), "QUIT")==0) { 
+			printf("Comando +QUIT. Terminando la conexion\n");
+			close(new_socket);
+			free(ui);
+			free(next_cmd);
+			free(tmp_cmd);
+			pthread_exit(NULL);
+		}else{
+			ejecuta_comando(next_cmd,usuario_actual);
+		}
+
+		
 	}
 	pthread_exit(NULL);
 }
