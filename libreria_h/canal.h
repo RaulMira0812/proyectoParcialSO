@@ -14,6 +14,8 @@
 #include <stdbool.h>
 #include <errno.h>
 #include <sys/socket.h>
+#include <time.h>
+
 
 //esta estructura:
 //Administra la lista de canales.
@@ -46,6 +48,8 @@ void broadcast(char* msg, canal* c, char* emisor); //envia un broadcast todos lo
 void lista_usuarios(usuario* u); //envia al usuario u la lista de todos los usuarios en el canal 
 
 void lista_usuarios_server(usuario* u, char* cmd_argumento); //envia al usuario u la lista de todos los usuarios conectados al server 
+
+void cmd_TIME(usuario *u , char *cmd_argumento);
 
 void mensaje_a_usuario(usuario* u, char* msg); //envia un mensaje a un usuario. 
 

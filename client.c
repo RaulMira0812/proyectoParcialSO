@@ -63,7 +63,7 @@ int main(int argc , char *argv[])
 	} 
 	
 	printf("Ingrese un comando: ");
-        scanf("%s" , message);
+        gets(message);
          
         //Send some data
         if( send(sock , message , strlen(message) , 0) < 0)
